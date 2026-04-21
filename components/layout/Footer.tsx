@@ -96,7 +96,7 @@ export function Footer() {
             
             {/* ✅ CLEANER LAYOUT: No extra wrapper needed now */}
             <div>
-                <LanguageSelector />
+                <LanguageSelector variant="footer" />
             </div>
         </div>
 

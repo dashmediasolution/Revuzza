@@ -29,7 +29,6 @@ import {
 import { cn } from "@/lib/utils";
 import { identifySearchIntent } from "@/lib/search-action";
 import { useAutoLocation } from "@/lib/hooks/use-auto-location"; 
-// ✅ 1. Import Translation tools
 import { TranslatableText } from "@/components/shared/translatable-text";
 import { useTranslation } from "@/components/shared/translation-context";
 import { translateContent } from "@/lib/translation-action";
@@ -42,7 +41,6 @@ interface SearchBarProps {
 export function SearchBar({ className, locations }: SearchBarProps) {
   const router = useRouter();
   
-  // Search State
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
   const [open, setOpen] = useState(false);
@@ -51,7 +49,6 @@ export function SearchBar({ className, locations }: SearchBarProps) {
   const [hasInteracted, setHasInteracted] = useState(false);
   const detectedCity = useAutoLocation();
 
-  // ✅ Custom Hook to translate placeholders (since we can't put components in props)
   const useTranslatedPlaceholder = (text: string) => {
     const { targetLang } = useTranslation();
     const [translated, setTranslated] = useState(text);
@@ -71,11 +68,9 @@ export function SearchBar({ className, locations }: SearchBarProps) {
     return translated;
   };
 
-  // ✅ Prepare Translated Placeholders
   const queryPlaceholder = useTranslatedPlaceholder("Search for companies, categories...");
   const locationSearchPlaceholder = useTranslatedPlaceholder("Search locations...");
 
-  // 3. Auto-Select Logic
   useEffect(() => {
     if (detectedCity && !location && !hasInteracted) {
       const match = locations.find(dbLoc => 
@@ -123,20 +118,19 @@ export function SearchBar({ className, locations }: SearchBarProps) {
     <form 
       onSubmit={handleSearch} 
       className={cn(
-        "flex flex-col md:flex-row items-center bg-white p-2 rounded-2xl md:rounded-full shadow-md border border-gray-100 mx-auto gap-2 md:gap-0",
+        "flex flex-col md:flex-row items-center bg-white p-2 rounded-none border border-gray-100 mx-auto gap-2 md:gap-0 shadow-sm",
         className
       )}
     >
       
-      {/* Query Input */}
+      {/* Query Input - ✅ Search Icon Removed */}
       <div className="relative w-full md:flex-1">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
         <Input 
           id="search-query"
-          placeholder={queryPlaceholder} // ✅ Using Translated Placeholder
+          placeholder={queryPlaceholder}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="border-0 shadow-none focus-visible:ring-0 pl-12 h-12 text-base bg-transparent rounded-full text-gray-900 placeholder:text-gray-500"
+          className="border-0 shadow-none focus-visible:ring-0 px-6 h-12 text-base bg-transparent rounded-none text-gray-900 placeholder:text-gray-500"
           disabled={isPending}
         />
       </div>
@@ -144,7 +138,7 @@ export function SearchBar({ className, locations }: SearchBarProps) {
       <div className="hidden md:block w-[1px] h-8 bg-gray-200 mx-2" />
 
       {/* Location Dropdown */}
-      <div className="relative w-full md:w-[240px]">
+      <div className="relative w-full md:w-[200px]">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -156,18 +150,15 @@ export function SearchBar({ className, locations }: SearchBarProps) {
               {location ? (
                 <div className="flex items-center gap-2 truncate">
                    <MapPin className="h-4 w-4 text-[#0ABED6] shrink-0" />
-                   {/* We don't translate the selected location value (e.g. "Delhi") as it's a proper noun/DB value */}
                    <span className="truncate">{location}</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-gray-500 text-sm">
                    {!detectedCity ? <Navigation className="h-3 w-3 animate-pulse" /> : null}
-                   {/* ✅ Translated Dropdown Label */}
-                   <span><TranslatableText text="Select City/State" /></span>
+                   <span><TranslatableText text="Select Location" /></span>
                 </div>
               )}
               
-              {/* Clear Button */}
               {location ? (
                  <div 
                     onClick={(e) => {
@@ -185,13 +176,11 @@ export function SearchBar({ className, locations }: SearchBarProps) {
             </Button>
           </PopoverTrigger>
           
-          <PopoverContent className="w-[240px] p-0" align="start">
+          <PopoverContent className="w-[240px] p-0 rounded-none" align="start">
             <Command>
-              {/* ✅ Translated Command Input Placeholder */}
               <CommandInput placeholder={locationSearchPlaceholder} />
               <CommandList>
                 <CommandEmpty>
-                    {/* ✅ Translated Empty State */}
                     <TranslatableText text="No locations found." />
                 </CommandEmpty>
                 <CommandGroup>
@@ -222,18 +211,17 @@ export function SearchBar({ className, locations }: SearchBarProps) {
         </Popover>
       </div>
 
-      {/* Search Button */}
+      {/* ✅ Search Button - Magnifying Glass icon replaces text */}
       <Button 
         type="submit" 
-        size="lg" 
+        size="icon" 
         disabled={isPending}
-        className="w-full md:w-auto rounded-xl md:rounded-full px-8 bg-[#0ABED6] hover:bg-[#0ABED6]/80 text-white h-12 font-semibold shadow-sm"
+        className="w-full md:w-14 rounded-sm bg-[#0ABED6] hover:bg-[#0ABED6]/80 text-white h-12 shadow-sm transition-all"
       >
         {isPending ? (
             <Loader2 className="h-5 w-5 animate-spin" /> 
         ) : (
-            // ✅ Translated Button Text
-            <TranslatableText text="Search" />
+            <Search className="h-5 w-5" />
         )}
       </Button>
 

@@ -3,7 +3,7 @@ import { TranslatableText } from "@/components/shared/translatable-text";
 
 export function VisionSection() {
   return (
-    <div className="bg-gray-50 py-20 sm:py-10">
+    <div className="bg-gray-100 py-20 sm:py-10">
       <div className="container mx-auto max-w-5xl px-4 text-center space-y-12">
         
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">

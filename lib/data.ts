@@ -136,6 +136,8 @@ export async function getTopRatedCompanies() {
         quote: r.comment || "Great experience!",
         createdAt: r.createdAt,
         dateOfExperience: r.dateOfExperience,
+        userAvatarUrl: r.user.image,
+        userInitials: r.user.name ? r.user.name.split(' ').map((n: string) => n[0]).join('') : "U",
       })),
       isFeatured: company.featured,
     };

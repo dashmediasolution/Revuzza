@@ -61,8 +61,6 @@ export function CheckBusinessSearch() {
 
         <form onSubmit={handleCheck} className="relative max-w-2xl mx-auto">
           <div className="relative">
-            {/* Search Icon */}
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5 pointer-events-none" />
             
             {/* Input Field */}
             <Input

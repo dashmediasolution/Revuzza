@@ -1,27 +1,89 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
-  Star, TrendingUp, MessageSquare, Eye, ArrowRight, ShieldCheck, AlertTriangle 
-} from "lucide-react";
+  MessageSquare, Eye, ArrowRight, ShieldCheck, AlertTriangle, MoreVertical, CheckCircle2, ChevronDown, Sparkles
+} from "lucide-react"; 
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BlockRating } from "@/components/shared/block-rating";
 import { VerifyDomainForm } from "@/components/business_auth/verify-domain-form"; 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { differenceInCalendarDays, addDays } from "date-fns"; 
 
+// ✅ Import BlockRating
+import { BlockRating } from "@/components/shared/block-rating";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 export const dynamic = 'force-dynamic';
-export const metadata = { title: "Overview - Business Center" };
+export const metadata = { title: "Dashboard - Business Center" };
 
 function formatDate(date: Date | string) {
    return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+// --- COMPONENTS ---
+function StatItem({ label, value, subValue, badge, badgeColor, icon: Icon, showDivider = true, ratingValue }: any) {
+  return (
+    <div className={`flex-1 px-6 ${showDivider ? 'border-r border-gray-100 md:border-r' : ''}`}>
+        <div className="flex justify-between items-start mb-2">
+            {ratingValue !== undefined ? (
+               <div className="-mt-1">
+                 <BlockRating value={ratingValue} size="sm" />
+               </div>
+            ) : (
+               <Icon className="w-5 h-5 text-gray-400" />
+            )}
+
+            {badge && (
+                <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${badgeColor}`}>
+                    {badge}
+                </span>
+            )}
+        </div>
+        <div>
+            <div className="flex items-baseline gap-2">
+                <h3 className="text-2xl font-bold text-gray-900">{value}</h3>
+                {subValue && <span className="text-sm text-gray-400 font-medium">/ {subValue}</span>}
+            </div>
+            <p className="text-sm text-gray-500 mt-1 font-medium">{label}</p>
+        </div>
+    </div>
+  );
+}
+
+function ProfileHealthItem({ label, subLabel, isCompleted }: any) {
+    return (
+        <div className="flex items-center justify-between py-4 border-b border-gray-50 last:border-0">
+            <div className="flex items-center gap-4">
+                <div className={`p-2 rounded-lg ${isCompleted ? 'bg-emerald-50' : 'bg-gray-50'}`}>
+                    <div className={`w-5 h-5 ${isCompleted ? 'text-emerald-500' : 'text-gray-400'}`}>
+                        {isCompleted ? <ShieldCheck className="w-5 h-5" /> : <div className="w-4 h-4 rounded-full border-2 border-gray-300" />}
+                    </div>
+                </div>
+                <div>
+                    <p className="text-sm font-bold text-gray-900">{label}</p>
+                    <p className="text-xs text-gray-400">{subLabel}</p>
+                </div>
+            </div>
+            {isCompleted ? (
+                <CheckCircle2 className="w-5 h-5 text-emerald-500 fill-emerald-50" />
+            ) : (
+                <div className="w-5 h-5 rounded-full border-2 border-gray-200" />
+            )}
+        </div>
+    );
+}
+
+// --- MAIN PAGE ---
+
 export default async function BusinessDashboardPage() {
   const session = await auth();
-
   if (!session?.user?.companyId) return redirect("/business/login");
 
   const company = await prisma.company.findUnique({
@@ -29,7 +91,7 @@ export default async function BusinessDashboardPage() {
     include: {
       _count: { select: { reviews: true } },
       reviews: {
-         take: 3,
+         take: 5, 
          orderBy: { createdAt: 'desc' },
          include: { user: true }
       }
@@ -38,307 +100,296 @@ export default async function BusinessDashboardPage() {
 
   if (!company) return <div className="p-8">Company profile not found.</div>;
 
-  // 1. FROZEN CHECK
   if (company.isFrozen) {
      return (
        <div className="h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
           <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md text-center border border-red-100">
              <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
              <h1 className="text-2xl font-bold text-gray-900 mb-2">Account Frozen</h1>
-             <p className="text-gray-600 mb-6">
-               Your business account has been restricted due to pending domain verification or policy violations.
-             </p>
-             <Button asChild className="w-full bg-[#000032]">
-                <Link href="mailto:support@platform.com">Contact Support</Link>
-             </Button>
+             <Button asChild className="w-full bg-[#000032] mt-4"><Link href="mailto:support@platform.com">Contact Support</Link></Button>
           </div>
        </div>
      );
   }
 
-  const isDomainVerified = !!company.domainVerified;
+  // --- BADGE LOGIC ---
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  // ✅ 2. UPDATED COUNTDOWN LOGIC
-  // We use 'claimedAt' (when email was sent). Fallback to 'createdAt' if null.
+  const newReviewsCount = await prisma.review.count({
+    where: { companyId: company.id, createdAt: { gte: startOfMonth } }
+  });
+
+  const pastReviewsStats = await prisma.review.aggregate({
+    where: { companyId: company.id, createdAt: { lt: startOfMonth } },
+    _avg: { starRating: true },
+    _count: { starRating: true }
+  });
+
+  const currentRating = company.rating || 0;
+  const pastRating = pastReviewsStats._avg.starRating || 0;
+  const ratingDiff = (currentRating - pastRating).toFixed(1);
+  const isPositive = (currentRating - pastRating) >= 0;
+  
+  const ratingBadgeText = pastReviewsStats._count.starRating > 0 ? `${isPositive ? '+' : ''}${ratingDiff}` : "+0.0";
+  const ratingBadgeColor = isPositive ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600";
+
+  // --- HEALTH LOGIC ---
+  const isDomainVerified = !!company.domainVerified;
   const startDate = company.claimedAt || company.createdAt || new Date(); 
   const deadlineDate = addDays(new Date(startDate), 30);
   const daysRemaining = differenceInCalendarDays(deadlineDate, new Date());
-  
   const isOverdue = daysRemaining < 0;
-  // If overdue, show 0 days remaining, but keep the 'isOverdue' flag true for the red UI
   const displayDays = isOverdue ? 0 : daysRemaining;
 
-
-  // Profile Completion logic
   const hasLogo = !!company.logoImage;
   const hasDescription = !!company.briefIntroduction;
   const hasWebsite = !!company.websiteUrl;
-  const completionCriteria = [hasLogo, hasDescription, hasWebsite,];
+  const completionCriteria = [hasLogo, hasDescription, hasWebsite];
   const completedCount = completionCriteria.filter(Boolean).length;
   const completionScore = Math.round((completedCount / completionCriteria.length) * 100);
 
+  // User Plan
+  const currentPlan = company.plan || "FREE";
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      
-      {/* --- HEADER --- */}
-      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 border-b border-gray-200 pb-4 ">
-        <div>
-           <h1 className="text-3xl font-bold text-[#000032]">Overview</h1>
-           <p className="text-gray-500 mt-1">
-             Welcome back! Here's what's happening with <span className="font-semibold text-[#0ABED6]">{company.name}</span> today.
-           </p>
+    <div className="min-h-screen p-6 lg:p-8 pb-20">
+      <div className="max-w-[1440px] mx-auto space-y-8">
+        
+        {/* --- HEADER --- */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 className="text-3xl font-bold text-[#111827]">Dashboard</h1>
+                <p className="text-gray-500 mt-1">
+                    Welcome back! Here's what's happening with <span className="text-emerald-500 font-medium">{company.name}</span> today.
+                </p>
+            </div>
+            
+            <div className="flex items-center gap-4 flex-wrap">
+                 {/* ✅ GHOST PLAN BADGE */}
+                 <div className="flex items-center gap-1.5 px-2 text-amber-500">
+                     <Sparkles className="h-4 w-4 fill-amber-500/20" />
+                     <span className="text-sm font-bold uppercase tracking-widest">{currentPlan}</span>
+                 </div>
+
+                 {/* ✅ EQUAL VERTICAL SEPARATOR 1 */}
+                 <div className="h-6 w-px bg-gray-300" />
+
+                 {/* ✅ GHOST PUBLIC VIEW BUTTON */}
+                 <Link href={`/company/${company.slug}`} target="_blank">
+                    <Button variant="ghost" className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 gap-2 rounded-full px-4">
+                        <Eye className="w-4 h-4 text-gray-400" /> View Public Page
+                    </Button>
+                 </Link>
+                 
+                 {/* ✅ EQUAL VERTICAL SEPARATOR 2 */}
+                 <div className="h-6 w-px bg-gray-300" />
+
+                 {/* ✅ COMPANY LOGO (Restored Size) */}
+                 <div className="flex items-center">
+                     <Avatar className="h-12 w-[140px] bg-transparent rounded-none">
+                        <AvatarImage src={company.logoImage || ''} className="object-contain" />
+                        <AvatarFallback className="bg-gray-100 text-gray-600 font-bold rounded-md w-12 flex items-center justify-center">
+                            {company.name?.[0]?.toUpperCase() || 'C'}
+                        </AvatarFallback>
+                     </Avatar>
+                 </div>
+            </div>
         </div>
-        <Link href={`/company/${company.slug}`} target="_blank">
-            <Button variant="outline" className="gap-2 bg-white hover:bg-gray-50 text-[#000032] border-gray-200 shadow-sm">
-                <Eye className="h-4 w-4" /> View Public Page
-            </Button>
-        </Link>
-      </div>
 
-      {/* --- STATS GRID --- */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         {/* ... (Keep your existing stats cards unchanged) ... */}
-           {/* Card 1: TrustScore */}
-           <Card className="border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-               <CardTitle className="text-sm font-medium text-gray-500">TrustScore</CardTitle>
-               <Star className="h-8 w-8 p-1 rounded-sm text-white fill-white bg-[#0892A5]" />
-            </CardHeader>
-            <CardContent>
-               <div className="text-3xl font-bold text-[#000032]">
-                  {(company.rating || 0).toFixed(1)} <span className="text-lg text-gray-400 font-normal">/ 5.0</span>
-               </div>
-               <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                  <TrendingUp className="h-4 w-4 text-green-500" /> 
-                  <span className="text-green-600 font-medium">Live</span> based on all reviews
-               </p>
-            </CardContent>
-         </Card>
+        {/* --- MAIN GRID --- */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
+            
+            {/* LEFT COLUMN */}
+            <div className="xl:col-span-2 space-y-8">
+                
+                {/* OVERVIEW CARD */}
+                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                    <div className="flex justify-between items-center mb-8">
+                        <h2 className="text-xl font-bold text-gray-900">Overview</h2>
+                    </div>
 
-         {/* Card 2: Total Reviews */}
-         <Card className="border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-               <CardTitle className="text-sm font-medium text-gray-500">Total Reviews</CardTitle>
-               <MessageSquare className="h-8 w-8 text-[#0ABED6]" />
-            </CardHeader>
-            <CardContent>
-               <div className="text-3xl font-bold text-[#000032]">{company._count.reviews}</div>
-               <p className="text-xs text-muted-foreground mt-2">Lifetime volume</p>
-            </CardContent>
-         </Card>
+                    <div className="flex flex-col md:flex-row gap-8 md:gap-0">
+                        <StatItem 
+                            label="Trust Score Rating" 
+                            value={(company.rating || 0).toFixed(1)} 
+                            subValue="5.0"
+                            badge={ratingBadgeText}
+                            badgeColor={ratingBadgeColor}
+                            ratingValue={company.rating || 0}
+                        />
 
-         {/* Card 3: Profile Views */}
-         <Card className="border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-               <CardTitle className="text-sm font-medium text-gray-500">Profile Views</CardTitle>
-               <Eye className="h-8 w-8 text-purple-500" />
-            </CardHeader>
-            <CardContent>
-               <div className="text-3xl font-bold text-[#000032]">
-                  {company.views || 0}
-               </div>
-               <p className="text-xs text-muted-foreground mt-2 text-gray-500">
-                  Total page visits
-               </p>
-            </CardContent>
-         </Card>
-      </div>
+                        <StatItem 
+                            label="Total Reviews" 
+                            value={company._count.reviews} 
+                            badge={`+${newReviewsCount} New`}
+                            badgeColor="bg-emerald-50 text-emerald-600"
+                            icon={MessageSquare}
+                        />
 
-      {/* --- MAIN CONTENT AREA --- */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-         
-         {/* LEFT COLUMN: Latest Reviews */}
-         <div className="lg:col-span-2 space-y-6">
-             <div className="flex justify-between items-center">
-                <h3 className="font-bold text-[#000032] text-lg">Latest Reviews</h3>
-                <Link href="/business/dashboard/reviews" className="text-sm text-[#0ABED6] hover:underline font-medium flex items-center gap-1">
-                   View all <ArrowRight className="h-3 w-3" />
-                </Link>
-             </div>
-             
-             {company.reviews.length > 0 ? (
-                 <div className="space-y-4">
-                    {company.reviews.map((review) => (
-                        <div key={review.id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
-                           <div className="flex items-start justify-between mb-4">
-                              <div className="flex items-center gap-3">
-                                 <Avatar className="h-10 w-10 border bg-gray-50">
-                                    <AvatarImage src={review.user.image || ''} />
-                                    <AvatarFallback className="text-[#000032] font-bold">
-                                       {review.user.name?.[0] || 'U'}
-                                    </AvatarFallback>
-                                 </Avatar>
-                                 <div>
-                                    <p className="font-bold text-[#000032] text-sm">{review.user.name || "Anonymous"}</p>
-                                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                                       <span>Verified Reviewer</span>
-                                    </div>
-                                 </div>
-                              </div>
-                              <span className="text-xs text-gray-400">{formatDate(review.createdAt)}</span>
-                           </div>
-
-                           <div className="mb-3">
-                              <BlockRating value={review.starRating} size="sm" />
-                           </div>
-                           {review.reviewTitle && (
-                              <h4 className="font-bold text-gray-900 mb-2 text-base">{review.reviewTitle}</h4>
-                           )}
-
-                           <p className="text-sm text-gray-600 line-clamp-3 leading-relaxed mb-4">
-                              "{review.comment}"
-                           </p>
-
-                           <div className="mb-5">
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                                 Date of experience: {review.dateOfExperience ? formatDate(review.dateOfExperience) : 'N/A'}
-                              </span>
-                           </div>
-                           
-                           <div className="pt-4 border-t border-gray-50 flex justify-end">
-                              <Link href={`/business/dashboard/reviews`}>
-                                  <Button size="sm" variant="ghost" className="text-[#0ABED6] hover:text-[#09A8BD] hover:bg-cyan-50 h-8 text-xs font-semibold">
-                                     Reply to customer
-                                  </Button>
-                              </Link>
-                           </div>
-                        </div>
-                    ))}
-                 </div>
-             ) : (
-                 <div className="bg-white rounded-2xl p-10 text-center border border-dashed border-gray-200">
-                     {/* ... Empty State ... */}
-                      <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <MessageSquare className="h-8 w-8" />
-                     </div>
-                     <h3 className="text-lg font-bold text-[#000032]">No reviews yet</h3>
-                     <p className="text-gray-500 mt-2 max-w-sm mx-auto text-sm">
-                        Your customers are waiting! Share your profile link to start collecting feedback.
-                     </p>
-                     <Button className="mt-6 bg-[#000032] hover:bg-[#000032]/90 text-white rounded-full">
-                        Copy Profile Link
-                     </Button>
-                 </div>
-             )}
-         </div>
-
-         {/* RIGHT COLUMN: Sidebar Cards */}
-         <div className="space-y-6">
-             
-             {/* Invite Tools Card */}
-             <div className="bg-[#000032] rounded-2xl p-6 text-white relative overflow-hidden shadow-lg">
-                <div className="relative z-10">
-                   <h3 className="font-bold text-lg mb-2">Get More Reviews</h3>
-                   <p className="text-blue-100 text-sm mb-6 leading-relaxed">
-                      Use our automated tools to invite your customers via email.
-                   </p>
-                   <Link href="/business/dashboard/marketing">
-                     <Button className="w-full bg-[#0ABED6] hover:bg-[#09A8BD] text-white border-none font-bold">
-                        Launch Campaign
-                     </Button>
-                   </Link>
+                        <StatItem 
+                            label="Profile Views" 
+                            value={company.views || 0} 
+                            icon={Eye}
+                            showDivider={false} 
+                        />
+                    </div>
                 </div>
-                {/* Decorative Elements */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#0ABED6] rounded-full opacity-10 blur-2xl -mr-10 -mt-10" />
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500 rounded-full opacity-20 blur-2xl -ml-10 -mb-10" />
-             </div>
 
-             {/* ✅ 3. VERIFY DOMAIN CARD WITH DYNAMIC COUNTDOWN */}
-             {!isDomainVerified && (
-                <div className={`rounded-2xl border p-6 shadow-sm relative overflow-hidden ${isOverdue ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"}`}>
-                   <div className="flex items-start gap-3 mb-4">
-                      <div className={`p-2 rounded-full shrink-0 mt-1 ${isOverdue ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-600"}`}>
-                         <AlertTriangle className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-[#000032] text-lg leading-tight">Verify Domain</h3>
-                        
-                        {/* THE COUNTDOWN TEXT */}
-                        <p className={`text-xs font-bold mt-1 ${isOverdue ? "text-red-700" : "text-amber-800"}`}>
-                           {isOverdue 
-                              ? "Verification Overdue. Account at risk." 
-                              : `Required within ${displayDays} days.`
-                           }
+                {/* REVIEWS TABLE */}
+                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 h-fit">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-bold text-gray-900">Recent Reviews</h2>
+                        <Link href="/business/dashboard/reviews" className="text-sm font-bold text-emerald-500 hover:text-emerald-600 flex items-center gap-1">
+                            View All <ArrowRight className="w-4 h-4" />
+                        </Link>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full table-fixed min-w-[600px]">
+                            <thead>
+                                <tr className="border-b border-gray-100 text-left">
+                                    <th className="py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider w-[40%]">Name</th>
+                                    <th className="py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider w-[20%]">Ratings</th>
+                                    <th className="py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider w-[15%]">Date</th>
+                                    <th className="py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider w-[15%]">Title</th>
+                                    <th className="py-4 w-[10%]"></th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {company.reviews.length > 0 ? company.reviews.map((review) => (
+                                    <tr key={review.id} className="group hover:bg-gray-50/50 transition-colors">
+                                        <td className="py-5 pr-4">
+                                            <div className="flex items-center gap-3">
+                                                <Avatar className="h-10 w-10 border border-gray-100 shrink-0">
+                                                    <AvatarImage src={review.user.image || ''} />
+                                                    <AvatarFallback className="bg-gray-100 text-gray-500 font-bold text-sm">
+                                                        {review.user.name?.[0] || 'A'}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div className="truncate">
+                                                    <p className="font-bold text-gray-900 text-sm truncate">{review.user.name || "Anonymous"}</p>
+                                                    <p className="text-[11px] text-gray-400 font-medium">Verified Reviewer</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        
+                                        <td className="py-5">
+                                            <BlockRating value={review.starRating} size="sm" />
+                                        </td>
+                                        
+                                        <td className="py-5 text-sm font-bold text-gray-900">
+                                            {formatDate(review.createdAt)}
+                                        </td>
+                                        <td className="py-5 text-sm font-bold text-gray-900 truncate pr-2">
+                                            {review.reviewTitle || "Review"}
+                                        </td>
+                                        
+                                        {/* ACTIONS MENU */}
+                                        <td className="py-5 pl-2">
+                                            <div className="flex justify-end">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button 
+                                                            size="icon" 
+                                                            variant="ghost" 
+                                                            className="h-8 w-8 text-gray-400 hover:text-[#0ABED6] hover:bg-cyan-50 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                                                        >
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="w-32 bg-white border border-gray-100 rounded-xl shadow-lg">
+                                                        <DropdownMenuItem asChild className="focus:bg-gray-50 cursor-pointer rounded-lg m-1">
+                                                            <Link href="/business/dashboard/reviews" className="w-full font-medium text-gray-700">
+                                                                View
+                                                            </Link>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem asChild className="focus:bg-gray-50 cursor-pointer rounded-lg m-1">
+                                                            <Link href="/business/dashboard/reviews" className="w-full font-medium text-[#0ABED6]">
+                                                                Reply
+                                                            </Link>
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )) : (
+                                    <tr>
+                                        <td colSpan={5} className="py-12 text-center text-gray-400 text-sm">
+                                            No reviews yet.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="mt-6 pt-6 border-t border-gray-50 text-center">
+                        <p className="text-sm text-gray-400">
+                            Showing latest 5 reviews. <Link href="/business/dashboard/reviews" className="text-[#0ABED6] font-medium hover:underline transition-all">Visit Review Page</Link> for more.
                         </p>
-                      </div>
-                   </div>
-                   
-                   <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                      Confirm you own a company email (e.g. name@company.com) to secure your account.
-                   </p>
-                   
-                   <VerifyDomainForm />
-                </div>
-             )}
-
-             {/* ✅ Verified Success Card */}
-             {isDomainVerified && (
-                <div className="bg-emerald-50 rounded-2xl border border-emerald-100 p-6 shadow-sm flex items-center gap-4">
-                    <div className="bg-emerald-100 p-3 rounded-full text-emerald-600">
-                       <ShieldCheck className="h-6 w-6" />
                     </div>
-                    <div>
-                       <h3 className="font-bold text-[#000032]">Domain Verified</h3>
-                       <p className="text-xs text-emerald-700 font-medium">{company.domainVerifyEmail}</p>
+
+                </div>
+            </div>
+
+            {/* RIGHT COLUMN */}
+            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 h-fit space-y-8">
+                
+                {/* 1. Profile Health */}
+                <div>
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="font-bold text-gray-900 text-lg">Profile Health</h3>
+                        <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
+                            {completionScore}%
+                        </span>
+                    </div>
+                    <div className="space-y-1">
+                        <ProfileHealthItem label="Upload Logo" subLabel="Brand Identity" isCompleted={hasLogo} />
+                        <ProfileHealthItem label="Add Description" subLabel="Business Details" isCompleted={hasDescription} />
+                        <ProfileHealthItem label="Link Website" subLabel="Online Presence" isCompleted={hasWebsite} />
                     </div>
                 </div>
-             )}
 
-             {/* Profile Health Card */}
-             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-[#000032] flex items-center gap-2">
-                       <ShieldCheck className="h-4 w-4 text-[#0ABED6]" />
-                       Profile Health
-                    </h3>
-                    <span className="text-xs font-bold text-[#0ABED6] bg-cyan-50 px-2 py-1 rounded-full">
-                       {completionScore}%
-                    </span>
-                 </div>
-                 
-                 <div className="w-full bg-gray-100 rounded-full h-2 mb-6 overflow-hidden">
-                    <div 
-                      className="bg-[#0ABED6] h-full rounded-full transition-all duration-1000 ease-out" 
-                      style={{ width: `${completionScore}%` }}
-                    />
-                 </div>
+                {/* 2. Domain Verification */}
+                {isDomainVerified ? (
+                    <div className="bg-emerald-50 rounded-2xl p-6 border border-emerald-100 flex items-center gap-4">
+                         <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center text-emerald-500 shadow-sm shrink-0">
+                            <ShieldCheck className="w-5 h-5" />
+                         </div>
+                         <div>
+                            <h3 className="font-bold text-emerald-900 text-sm">Domain Verified</h3>
+                            <p className="text-xs text-emerald-700/80 mt-0.5">{company.domainVerifyEmail}</p>
+                         </div>
+                    </div>
+                ) : (
+                    <div className={`rounded-2xl p-6 border ${isOverdue ? 'bg-red-50 border-red-100' : 'bg-amber-50 border-amber-100'}`}>
+                        <div className="flex items-center gap-3 mb-2">
+                            <AlertTriangle className={`w-5 h-5 ${isOverdue ? 'text-red-500' : 'text-amber-500'}`} />
+                            <h3 className={`font-bold text-sm ${isOverdue ? 'text-red-900' : 'text-amber-900'}`}>Verify Domain</h3>
+                        </div>
+                        <p className={`text-xs mb-4 ${isOverdue ? 'text-red-700' : 'text-amber-700'}`}>
+                           {isOverdue ? "Action required immediately." : `Required in ${displayDays} days.`}
+                        </p>
+                        <VerifyDomainForm />
+                    </div>
+                )}
 
-                 <ul className="space-y-3">
-                    <li className="flex items-center text-sm">
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center mr-3 shrink-0 ${hasLogo ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
-                           {hasLogo ? "✓" : "○"}
-                        </div>
-                        <span className={hasLogo ? "text-gray-500 line-through decoration-gray-300" : "text-[#000032] font-medium"}>
-                           Upload Logo
-                        </span>
-                    </li>
-                    <li className="flex items-center text-sm">
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center mr-3 shrink-0 ${hasDescription ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
-                           {hasDescription ? "✓" : "○"}
-                        </div>
-                        <span className={hasDescription ? "text-gray-500 line-through decoration-gray-300" : "text-[#000032] font-medium"}>
-                           Add Description
-                        </span>
-                    </li>
-                    <li className="flex items-center text-sm">
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center mr-3 shrink-0 ${hasWebsite ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
-                           {hasWebsite ? "✓" : "○"}
-                        </div>
-                        <span className={hasWebsite ? "text-gray-500 line-through decoration-gray-300" : "text-[#000032] font-medium"}>
-                           Link Website
-                        </span>
-                    </li>
-                 </ul>
-                 
-                 {completionScore < 100 && (
-                    <Link href="/business/dashboard/settings">
-                        <Button variant="outline" size="sm" className="w-full mt-6 border-dashed border-gray-300 text-gray-600 hover:text-[#000032] hover:bg-gray-100">
-                           Complete Profile
+                {/* 3. Marketing Campaign */}
+                <div className="bg-[#111827] rounded-2xl p-8 text-white text-center">
+                    <h3 className="font-bold text-lg mb-2">Get More Reviews</h3>
+                    <p className="text-gray-400 text-xs mb-6 leading-relaxed px-2">
+                        Use our automated tools to invite your customer via emails. Launch a campaign today.
+                    </p>
+                    <Link href="/business/dashboard/marketing">
+                        <Button className="w-full bg-white text-[#111827] hover:bg-gray-100 font-bold h-11 rounded-xl focus-visible:ring-0">
+                            Launch Campaign
                         </Button>
                     </Link>
-                 )}
-             </div>
-         </div>
+                </div>
+            </div>
+        </div>
       </div>
     </div>
   );

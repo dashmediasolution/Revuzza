@@ -75,7 +75,7 @@ export default async function CategoriesPage() {
             return (
               <div 
                 key={category.id} 
-                className="group flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100  overflow-hidden"
+                className="group flex flex-col bg-white rounded-none border border-gray-200  overflow-hidden"
               >
                 {/* Header */}
                 <div className="p-3  flex items-center gap-4 bg-[#0892A5]">
@@ -97,7 +97,7 @@ export default async function CategoriesPage() {
                         <li key={sub.id}>
                           <Link 
                             href={`/categories/${category.slug}/${sub.slug}`} 
-                            className="flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium text-gray-600 hover:text-[#0892A5]  transition-all group/item"
+                            className="flex items-center justify-between px-4 py-3 rounded-none text-sm font-medium text-gray-600 hover:text-[#0892A5]  transition-all group/item"
                           >
                             <span>
                                 <TranslatableText text={sub.name} />

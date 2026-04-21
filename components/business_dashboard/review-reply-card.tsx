@@ -86,10 +86,10 @@ export function ReviewReplyCard({ review, companyName }: ReviewReplyCardProps) {
 
   return (
     <>
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all h-full flex flex-col overflow-hidden group">
+      <div className="bg-white h-full flex flex-col overflow-hidden group">
         
         {/* --- TOP SECTION: REVIEW CONTENT --- */}
-        <div className="p-6 flex-1">
+        <div className="p-5 flex-1">
             <div className="flex items-start justify-between mb-4">
                <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10 border bg-gray-50">

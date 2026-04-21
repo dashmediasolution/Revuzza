@@ -90,7 +90,7 @@ export function SimilarCompaniesCarousel({ categoryName, companies }: SimilarCom
           <Link 
             key={company.id} 
             href={`/company/${company.slug}`}
-            className="flex-none w-[280px] bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition-all duration-200 group flex flex-col justify-between h-[200px]"
+            className="flex-none w-[280px] bg-white border border-gray-200 rounded-none p-5 hover:shadow-md transition-all duration-200 group flex flex-col justify-between h-[200px]"
           >
             {/* Top Section: Logo & Name */}
             <div>

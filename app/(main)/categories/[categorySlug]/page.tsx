@@ -88,7 +88,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
       />
       
       {/* Header & Breadcrumbs */}
-      <div className="bg-gray-50 border-b border-black/10 text-black py-8 md:py-10">
+      <div className="bg-gray-100 border-b border-black/10 text-black py-8 md:py-10">
         <div className="container mx-auto max-w-7xl px-4">
           <div className="mb-6">
             <Breadcrumb items={breadcrumbItems} className="text-gray-600" />

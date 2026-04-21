@@ -1,7 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
-import {format} from 'date-fns'
-// ✅ Import Translator
+import { format } from 'date-fns';
 import { TranslatableText } from "@/components/shared/translatable-text";
 
 interface FeaturedBlogCardProps {
@@ -17,58 +18,72 @@ interface FeaturedBlogCardProps {
 }
 
 export function FeaturedBlogCard({ blog }: FeaturedBlogCardProps) {
-  // Format date first (as string) so we can pass it to translator if needed
-  const dateStr = format(new Date(blog.createdAt), "dd MMM, yyyy");
+  const dateStr = format(new Date(blog.createdAt), "MMMM dd, yyyy");
 
   return (
-    <Link href={`/blog/${blog.blogUrl}`} className="group block">
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-        
-        {/* Image Side */}
-        <div className="relative aspect-[16/9] lg:aspect-[3/2] w-full rounded-2xl overflow-hidden bg-gray-100 shadow-sm border">
-          {blog.imageUrl ? (
-            <Image
-              src={blog.imageUrl}
-              alt={blog.headline}
-              fill
-              className="object-cover"
-              priority
-            />
-          ) : (
-            <div className="w-full h-full bg-neutral-100 flex items-center justify-center text-neutral-400">
-              <TranslatableText text="No Image" />
-            </div>
-          )}
-        </div>
-
-        {/* Text Side */}
-        <div className="flex flex-col justify-center space-y-4">
-          <span className="text-sm font-semibold text-[#0892A5] uppercase tracking-wider flex items-center gap-1">
-            <TranslatableText text="Featured" /> • <TranslatableText text={blog.category} />
+    <div className="group relative flex flex-col">
+      {/* 1. OVERSIZED TYPOGRAPHY: Headline as the Hero */}
+      <div className="mb-12 max-w-5xl">
+        <div className="flex items-center gap-3 mb-6">
+          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#0892A5]">
+             <TranslatableText text="Featured Article" />
           </span>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight group-hover:text-[#0892A5] hover:underline transition-colors">
+          <div className="h-[1px] w-12 bg-gray-200" />
+        </div>
+        
+        <Link href={`/blog/${blog.blogUrl}`}>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-gray-900 leading-[0.95] tracking-tighter group-hover:text-[#0892A5] transition-colors">
             <TranslatableText text={blog.headline} />
           </h1>
-          <div className="text-gray-500 text-lg line-clamp-3 leading-relaxed">
-            <TranslatableText text={blog.metaDescription} />
+        </Link>
+      </div>
+
+      {/* 2. THE MONOLITH IMAGE: Full width, rounded-none */}
+      <Link href={`/blog/${blog.blogUrl}`} className="relative block w-full aspect-[21/9] overflow-hidden bg-gray-100 mb-10">
+        {blog.imageUrl ? (
+          <Image
+            src={blog.imageUrl}
+            alt={blog.headline}
+            fill
+            className="object-cover grayscale hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
+            priority
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-300">
+             <TranslatableText text="No Media" />
           </div>
-          <div className="flex items-center gap-3 pt-4">
-            <div className="h-10 w-10 rounded-full bg-[#0ABED6]/30 flex items-center justify-center text-sm font-bold text-[#0892A5]">
-              {blog.authorName.charAt(0)}
-            </div>
-            <div className="text-sm text-gray-600">
-              <span className="font-medium text-gray-900 block">
-                 <TranslatableText text={blog.authorName} />
-              </span>
-              <span className="text-gray-400">
-                 {/* Dates often don't need translation, but you can if you want locale formats */}
-                 <TranslatableText text={dateStr} />
-              </span>
-            </div>
+        )}
+      </Link>
+
+      {/* 3. INTEGRATED DATA BAR: Author & Meta */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+        <div className="max-w-xl">
+           <p className="text-lg md:text-xl text-gray-500 font-medium leading-relaxed italic">
+              <TranslatableText text={blog.metaDescription} />
+           </p>
+        </div>
+
+        {/* REDESIGNED PROFILE: The "Metadata Tag" */}
+        <div className="flex items-center gap-6 border-l border-gray-900 pl-6">
+          <div className="flex flex-col">
+            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+              <TranslatableText text="Written by" />
+            </span>
+            <span className="text-sm font-black text-gray-900 uppercase tracking-tight">
+              <TranslatableText text={blog.authorName} />
+            </span>
+          </div>
+          
+          <div className="flex flex-col text-right md:text-left">
+            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+              <TranslatableText text="Release Date" />
+            </span>
+            <span className="text-sm font-black text-gray-900 uppercase tracking-tight">
+              {dateStr}
+            </span>
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

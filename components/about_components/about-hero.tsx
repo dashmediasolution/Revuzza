@@ -7,7 +7,7 @@ import { TranslatableText } from "@/components/shared/translatable-text";
 
 export function AboutHero() {
   return (
-    <div className="bg-gray-50 py-20 sm:py-10">
+    <div className="bg-gray-100 py-20 sm:py-10">
       <div className="container mx-auto max-w-6xl px-4 flex flex-col-reverse md:flex-row items-center gap-12">
         
         {/* Left Column (Text) */}
@@ -49,7 +49,7 @@ export function AboutHero() {
               src="/images/about-banner.svg" 
               alt="People connecting through help"
               fill
-              className="object-cover"
+              className="object-cover bg-gray-100"
               priority
             />
         </div>

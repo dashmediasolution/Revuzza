@@ -54,7 +54,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="bg-gray-50 py-24">
+    <div className="bg-gray-100 py-24">
       <div className="container mx-auto max-w-6xl px-4">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">

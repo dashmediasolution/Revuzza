@@ -3,9 +3,9 @@ import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { format } from "date-fns";
-import { BlockRating } from '../shared/block-rating';
-// ✅ Import the Translator Component
+import { BlockRating } from '@/components/shared/block-rating'; // Adjusted import path based on context
 import { TranslatableText } from "@/components/shared/translatable-text";
+import { CheckCircle2, CalendarDays } from "lucide-react";
 
 type HeroReviewCardProps = {
   userName: string;
@@ -47,61 +47,94 @@ export function HeroReviewCard({
     <Link 
       href={`/company/${companySlug}`}
       className={cn(
-        "block w-[320px] bg-white rounded-none  border border-gray-200 transition-all duration-300 hover:-translate-y-1 cursor-pointer",
+        "block h-full w-[300px]", // Kept fixed width for Hero context
         className
       )}
     >
-      {/* Header */}
-      <div className='px-5 pt-6'>
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex items-center gap-2.5">
-          <Avatar className="h-8 w-8 border border-gray-100">
-            <AvatarImage src={userAvatarUrl || ''} alt={userName} />
-            <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col">
-            <span className="font-bold text-gray-900 text-sm line-clamp-1"><TranslatableText text={userName}/></span>
-            {/* ✅ Translated Date */}
-            <span className="text-[10px] text-gray-400">
-              <TranslatableText text={displayDate} />
-            </span>
-          </div>
+      <div className="flex flex-col h-full bg-white rounded-none border border-gray-200 hover:border-[#0892A5]/50 hover:shadow-md transition-all duration-300 cursor-pointer">
+
+        {/* --- HEADER SECTION --- */}
+        <div className="px-5 pt-5 pb-3 border-b border-gray-50">
+            <div className="flex justify-between items-start">
+                
+                {/* Left: Name & Verification */}
+                <div className="flex flex-col">
+                    <h3 className="font-bold text-gray-900 text-sm leading-tight line-clamp-1">
+                        <TranslatableText text={userName} />
+                    </h3>
+                    
+                    {/* Verified Badge */}
+                    <div className="flex items-center gap-1 mt-1">
+                         <CheckCircle2 className="w-3 h-3 text-[#0892A5]" />
+                         <span className="text-[10px] font-bold text-[#0892A5] uppercase tracking-wide">
+                            <TranslatableText text="Verified" />
+                         </span>
+                    </div>
+                </div>
+
+                {/* Right: Rating & Date */}
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                    <BlockRating value={rating} size="sm" />
+                    <span className="text-[10px] text-gray-400 font-medium">
+                        <TranslatableText text={displayDate} />
+                    </span>
+                </div>
+            </div>
         </div>
-      </div>
 
-      {/* Stars */}
-      <div className="mb-2"><BlockRating value={rating} size="sm"/></div>
+        {/* --- BODY SECTION --- */}
+        <div className="px-5 py-4 flex-1 flex flex-col">
+            
+            {/* Review Text (Uniform Min-Height) */}
+            <div className="text-gray-600 text-xs leading-relaxed min-h-[5rem] line-clamp-3">
+                <TranslatableText text={reviewText} />
+            </div>
 
-      {/* ✅ TRANSLATABLE CONTENT with line-clamp-3 */}
-      <p className="text-gray-600 text-xs leading-relaxed line-clamp-3 mb-3 min-h-[3rem]">
-        <TranslatableText text={reviewText} />
-      </p>
-
-      {/* Date Pill */}
-      <div className="mb-4">
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-gray-100 text-gray-500 border border-gray-100">
-           {/* ✅ Translated Label & Value */}
-           <TranslatableText text="Date of Experience" />: <TranslatableText text={displayExpDate} />
-        </span>
-      </div>
-      </div>
-
-      {/* Footer (Company) */}
-      <div className="flex items-center gap-2 py-6 px-5  bg-gray-50 border-t border-gray-100">
-        <div className="h-6 w-6 rounded flex items-center justify-center overflow-hidden relative shrink-0">
-            {companyLogoUrl ? (
-              <Image src={companyLogoUrl} alt={companyName} fill className="object-contain p-0.5" />
-            ) : (
-              <span className="text-[10px] font-bold text-gray-400">{companyName?.[0]}</span>
-            )}
+            {/* Date of Experience */}
+            <div className="mt-auto pt-4 flex items-center gap-1.5 opacity-80">
+                 <CalendarDays className="w-3 h-3 text-gray-400" />
+                 <span className="text-[10px] text-gray-500 font-medium">
+                    <TranslatableText text="Experience date" />: <span className="text-gray-700"><TranslatableText text={displayExpDate} /></span>
+                 </span>
+            </div>
         </div>
-        <div className="min-w-0">
-          {/* ✅ Translated Company Name */}
-          <div className="font-semibold text-gray-800 text-xs truncate">
-             <TranslatableText text={companyName} />
-          </div>
-          <p className="text-[10px] text-gray-400 truncate">{companyDomain}</p>
+
+        {/* --- FOOTER SECTION --- */}
+        <div className="bg-gray-50 border-t border-gray-200 px-5 py-3 flex items-center justify-between">
+             
+             {/* Company Info */}
+             <div className="flex items-center gap-3 overflow-hidden">
+                <div className="h-10 w-12 rounded-none bg-white flex items-center justify-center shrink-0">
+                   {companyLogoUrl ? (
+                      <div className="relative w-full h-full p-0.5">
+                         <Image src={companyLogoUrl} alt={companyName} fill className="object-contain" />
+                      </div>
+                   ) : (
+                      <span className="text-xs font-bold text-gray-400">{companyName?.[0]}</span>
+                   )}
+                </div>
+                <div className="flex flex-col min-w-0">
+                    <span className="font-bold text-gray-900 text-xs truncate">
+                        <TranslatableText text={companyName} />
+                    </span>
+                    <span className="text-[9px] text-gray-500 truncate">
+                        {companyDomain}
+                    </span>
+                </div>
+             </div>
+
+             {/* Posted By Avatar (Moved from top to footer) */}
+             <div className="flex items-center gap-2 pl-4 border-l border-gray-200 shrink-0">
+                 <Avatar className="h-8 w-8">
+                    <AvatarImage src={userAvatarUrl || ''} />
+                    <AvatarFallback className="text-[9px] bg-white text-gray-600 font-bold">
+                        {userInitials}
+                    </AvatarFallback>
+                 </Avatar>
+             </div>
+
         </div>
+
       </div>
     </Link>
   );

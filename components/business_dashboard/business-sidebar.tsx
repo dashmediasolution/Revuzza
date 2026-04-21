@@ -1,9 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  ChevronsUpDown,
   LayoutDashboard,
   LogOut,
   Star,
@@ -11,63 +10,32 @@ import {
   Store,
   Megaphone,
   Settings,
-  BellPlusIcon
+  BellPlusIcon,
+  Building2 
 } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { signOut } from "next-auth/react";
 
 // --- ANIMATION VARIANTS ---
+// Wider open state for elegance, 5rem closed to fit the floating padding perfectly
 const sidebarVariants = {
-  open: { width: "15rem" },
-  closed: { width: "3.5rem" },
+  open: { width: "17rem" },
+  closed: { width: "5rem" },
 };
 
-const contentVariants = {
-  open: { display: "block", opacity: 1 },
-  closed: { display: "block", opacity: 1 },
-};
-
-const variants = {
-  open: {
-    x: 0,
-    opacity: 1,
-    transition: { x: { stiffness: 1000, velocity: -100 } },
-  },
-  closed: {
-    x: -20,
-    opacity: 0,
-    transition: { x: { stiffness: 100 } },
-  },
-};
-
-const transitionProps = {
-  type: "tween",
-  ease: "easeOut",
-  duration: 0.2,
-  staggerChildren: 0.1,
-} as const;
-
-const staggerVariants = {
-  open: {
-    transition: { staggerChildren: 0.03, delayChildren: 0.02 },
-  },
+const textVariants = {
+  open: { opacity: 1, x: 0, display: "block", transition: { delay: 0.1 } },
+  closed: { opacity: 0, x: -10, transition: { duration: 0.1 }, transitionEnd: { display: "none" } },
 };
 
 // --- BUSINESS LINKS ---
 const BUSINESS_LINKS = [
   { name: "Overview", href: "/business/dashboard", icon: LayoutDashboard },
   { name: "Reviews", href: "/business/dashboard/reviews", icon: Star },
-  {name: "Business Updates", href:"/business/dashboard/updates", icon: BellPlusIcon},
+  { name: "Business Updates", href: "/business/dashboard/updates", icon: BellPlusIcon, badge: "New" },
   { name: "Analytics", href: "/business/dashboard/analytics", icon: BarChart3 },
   { name: "Marketing", href: "/business/dashboard/marketing", icon: Megaphone },
   { name: "Products & Services", href: "/business/dashboard/showcase", icon: Store },
@@ -79,97 +47,92 @@ export function BusinessSidebar() {
   const pathname = usePathname();
 
   return (
-    <motion.div
+    <motion.nav
       className={cn(
-        // Changed bg-gray-900 to your brand Navy #000032
-        "fixed left-0 z-40 h-full shrink-0 border-r border-[#0ABED6]/20 bg-[#000032] text-blue-100",
+        // ✅ FLOATING DESIGN: inset-y-4 left-4 creates the floating gap. rounded-3xl gives the premium app feel.
+        "fixed inset-y-4 left-4 z-50 flex flex-col rounded-3xl bg-[#000032] border border-white/10 shadow-2xl overflow-hidden",
       )}
       initial={isCollapsed ? "closed" : "open"}
       animate={isCollapsed ? "closed" : "open"}
       variants={sidebarVariants}
-      transition={transitionProps}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
       onMouseEnter={() => setIsCollapsed(false)}
       onMouseLeave={() => setIsCollapsed(true)}
     >
-      <motion.div
-        className={`relative z-40 flex h-full shrink-0 flex-col transition-all`}
-        variants={contentVariants}
-      >
-        <motion.ul variants={staggerVariants} className="flex h-full flex-col">
-          <div className="flex grow flex-col items-center">
-
-            {/* Header / Profile Dropdown */}
-            <div className="flex h-[60px] w-full shrink-0 items-center border-b border-white/10 p-2">
-              <div className="flex w-full">
-                <DropdownMenu modal={false}>
-                  <DropdownMenuTrigger className="w-full" asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex w-full justify-start items-center gap-2 px-2 hover:bg-white/10 hover:text-white"
-                    >
-                      <Avatar className='rounded size-6 bg-[#0ABED6]'>
-                        <AvatarFallback className="text-[#000032] font-bold">B</AvatarFallback>
-                      </Avatar>
-                      <motion.li
-                        variants={variants}
-                        className="flex items-center gap-2 overflow-hidden"
-                      >
-                        {!isCollapsed && (
-                          <>
-                            <div className="flex flex-col items-start text-left">
-                              <p className="text-sm font-bold text-white">My Business</p>
-                              <p className="text-[10px] text-blue-300">Owner</p>
-                            </div>
-                            <ChevronsUpDown className="ml-auto h-4 w-4 text-gray-500" />
-                          </>
-                        )}
-                      </motion.li>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-48 bg-[#000032] border-[#0ABED6]/30 text-blue-100">
-                    <DropdownMenuItem
-                      className="hover:bg-white/10 focus:bg-white/10 cursor-pointer text-red-400 focus:text-red-400"
-                      onClick={() => signOut({ callbackUrl: '/business/login' })}
-                    >
-                      <LogOut className="mr-2 h-4 w-4" /> Sign Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-
-            {/* Navigation Links */}
-            <div className="flex h-full w-full flex-col pt-4">
-              <div className="flex grow flex-col gap-2 px-2">
-                {/* Map through the links array */}
-                {BUSINESS_LINKS.map((link) => {
-                  const isActive = pathname === link.href;
-                  return (
-                    <Link
-                      key={link.name}
-                      href={link.href}
-                      className={cn(
-                        "flex h-10 w-full flex-row items-center rounded-md px-2 transition-all",
-                        isActive
-                          ? "bg-[#0ABED6] text-white shadow-md shadow-[#0ABED6]/20"
-                          : "hover:bg-white/10 hover:text-white"
-                      )}
-                    >
-                      <link.icon className="h-5 w-5 shrink-0" />
-                      <motion.li variants={variants}>
-                        {!isCollapsed && (
-                          <p className="ml-3 text-sm font-medium">{link.name}</p>
-                        )}
-                      </motion.li>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
+        
+      {/* --- TOP: Premium App Brand Header --- */}
+      <div className="flex h-[88px] shrink-0 items-center px-4 border-b border-white/5 bg-white/5">
+        <div className="flex items-center gap-4 w-full">
+          {/* Logo Box */}
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#0ABED6] to-blue-600 shadow-lg">
+            <Building2 className="h-5 w-5 text-white" />
           </div>
-        </motion.ul>
-      </motion.div>
-    </motion.div>
+          
+          {/* Text (Fades out when closed) */}
+          <motion.div variants={textVariants} className="flex flex-col whitespace-nowrap">
+            <h2 className="text-base font-black text-white tracking-wide">Business Center</h2>
+            <p className="text-[11px] font-bold text-[#0ABED6] uppercase tracking-widest mt-0.5">Workspace</p>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* --- MIDDLE: Scrollable Nav Links --- */}
+      <div className="flex-1 overflow-y-auto no-scrollbar py-6 px-3 space-y-1.5">
+        {BUSINESS_LINKS.map((link) => {
+          const isActive = pathname === link.href;
+          
+          return (
+            <Link
+              key={link.name}
+              href={link.href}
+              className={cn(
+                "relative flex h-12 w-full items-center rounded-2xl px-3 transition-all duration-200 group",
+                isActive 
+                  ? "bg-white/10" // Subtle background for active
+                  : "hover:bg-white/5"
+              )}
+            >
+              {/* ✅ ACTIVE INDICATOR: Sleek vertical line on the left */}
+              {isActive && (
+                <motion.div 
+                    layoutId="activeTab"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#0ABED6] rounded-r-full"
+                />
+              )}
+
+              <link.icon className={cn(
+                "h-5 w-5 shrink-0 transition-colors duration-200",
+                isActive ? "text-[#0ABED6]" : "text-gray-400 group-hover:text-gray-200"
+              )} />
+              
+              <motion.div variants={textVariants} className="ml-4 flex flex-1 items-center justify-between overflow-hidden">
+                <span className={cn(
+                    "whitespace-nowrap text-sm font-medium transition-colors duration-200",
+                    isActive ? "text-white font-bold" : "text-gray-400 group-hover:text-gray-200"
+                )}>
+                    {link.name}
+                </span>
+          
+              </motion.div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* --- BOTTOM: Sign Out --- */}
+      <div className="p-4 border-t border-white/5 bg-black/20 shrink-0">
+        <Button
+          variant="ghost"
+          onClick={() => signOut({ callbackUrl: '/business/login' })}
+          className="flex h-12 w-full items-center justify-start rounded-2xl px-3 text-red-400/80 hover:bg-red-500/10 hover:text-red-400 transition-colors group"
+        >
+          <LogOut className="h-5 w-5 shrink-0 transition-transform duration-300 group-hover:-translate-x-1" />
+          <motion.div variants={textVariants} className="ml-4 overflow-hidden">
+            <span className="whitespace-nowrap text-sm font-bold tracking-wide">Sign Out</span>
+          </motion.div>
+        </Button>
+      </div>
+
+    </motion.nav>
   );
 }

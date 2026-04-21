@@ -8,6 +8,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { sendProfessionalCampaign } from "@/lib/mail"; 
 // ✅ Import the new feature helper
 import { getCompanyFeatures } from "@/lib/plan-config";
+import { startOfMonth, endOfMonth } from "date-fns";
 
 // Configure Cloudinary
 cloudinary.config({
@@ -25,65 +26,44 @@ cloudinary.config({
 async function checkEmailLimit(companyId: string, recipientCount: number) {
   const company = await prisma.company.findUnique({
     where: { id: companyId },
-    select: { 
-        plan: true, 
-        emailUsageCount: true, 
-        emailUsageResetDate: true, // Needed for reset logic
-        customEmailLimit: true     // Needed for override logic
-    }
+    select: { plan: true, customEmailLimit: true }
   });
 
   if (!company) return { allowed: false, error: "Company not found" };
 
-  // --- 1. HANDLE MONTHLY RESET ---
-  let currentUsage = company.emailUsageCount || 0;
-  
-  // If reset date is missing or today is AFTER the reset date, wipe the slate clean.
-  const now = new Date();
-  const resetDate = company.emailUsageResetDate ? new Date(company.emailUsageResetDate) : now;
-
-  // Compare dates (if resetDate is in the past, we reset)
-  if (now > resetDate || !company.emailUsageResetDate) {
-      const nextReset = new Date();
-      nextReset.setMonth(nextReset.getMonth() + 1); // Set next reset to 1 month from now
-
-      await prisma.company.update({
-          where: { id: companyId },
-          data: {
-              emailUsageCount: 0,
-              emailUsageResetDate: nextReset
-          }
-      });
-      currentUsage = 0; // Reset local variable for calculation below
-  }
-
-  // --- 2. CHECK DYNAMIC LIMIT ---
   const features = getCompanyFeatures(company);
   const limit = features.emailLimit;
 
-  // Infinite limits (Custom/Scale/Pro) are always allowed
+  // Infinite limits (Custom/Scale) are always allowed
   if (limit === Infinity) return { allowed: true };
 
-  // Check calculation
+  // --- DYNAMIC CALCULATION (Matches Frontend) ---
+  const now = new Date();
+  
+  // Find all emails sent THIS month
+  const sentThisMonth = await prisma.campaign.findMany({
+      where: { 
+          companyId: companyId,
+          status: "SENT",
+          createdAt: { gte: startOfMonth(now), lte: endOfMonth(now) }
+      },
+      select: { recipients: true }
+  });
+
+  // Add up the recipients
+  const currentUsage = sentThisMonth.reduce((total, c) => total + c.recipients.length, 0);
+
+  // Check if adding this new batch pushes them over the limit
   if ((currentUsage + recipientCount) > limit) {
      return { 
          allowed: false, 
-         error: `Limit exceeded. You have ${limit - currentUsage} emails left this month, but tried to send ${recipientCount}.` 
+         error: `Limit exceeded. You only have ${limit - currentUsage} emails left this month.` 
      };
   }
 
   return { allowed: true };
 }
 
-/**
- * Helper to Increment Usage
- */
-async function incrementEmailUsage(companyId: string, count: number) {
-    await prisma.company.update({
-        where: { id: companyId },
-        data: { emailUsageCount: { increment: count } }
-    });
-}
 
 // --- 1. CREATE CAMPAIGN ACTION ---
 export async function createCampaign(prevState: any, formData: FormData) {
@@ -180,7 +160,6 @@ export async function createCampaign(prevState: any, formData: FormData) {
         );
         sentCount++;
       }
-      await incrementEmailUsage(companyId, sentCount);
 
       status = "SENT";
       sentAt = new Date();
@@ -332,8 +311,6 @@ export async function sendDraft(campaignId: string) {
         );
         count++;
     }
-
-    await incrementEmailUsage(session.user.companyId, count);
 
     await prisma.campaign.update({
         where: { id: campaignId },

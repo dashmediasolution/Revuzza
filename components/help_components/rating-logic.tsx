@@ -1,4 +1,4 @@
-import { Rating } from '@/components/shared/rating'; 
+import Image from 'next/image';
 // ✅ Import Translator
 import { TranslatableText } from "@/components/shared/translatable-text";
 
@@ -43,57 +43,15 @@ export function RatingLogic() {
               </div>
             </div>
 
-            {/* Visual Side (Redesigned Card) */}
+            {/* Visual Side (Image Placeholder) */}
             <div className="order-2 lg:order-2">
-               {/* Card Container */}
-               <div className="bg-gray-50 rounded-2xl overflow-hidden border border-gray-200">
-                
-                {/* Card Header */}
-                <div className="bg-gray-100/50 p-6 border-b border-gray-200 flex justify-between items-center">
-                    <div>
-                        <h4 className="font-bold text-gray-900"><TranslatableText text="New Company Scenario" /></h4>
-                        <p className="text-xs text-gray-500"><TranslatableText text="1 Review (5 Stars)" /></p>
-                    </div>
-                    <div className="h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
-                </div>
-                
-                {/* Comparison Grid */}
-                <div className="grid grid-cols-2 divide-x divide-gray-200">
-                    
-                    {/* Left: Standard */}
-                    <div className="p-8 text-center space-y-4 opacity-50 grayscale transition-all hover:grayscale-0 hover:opacity-100">
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                            <TranslatableText text="Standard Math" />
-                        </p>
-                        <div className="text-6xl font-black text-gray-300 tracking-tighter">
-                            5.0
-                        </div>
-                        <p className="text-sm text-gray-400 font-medium">
-                            <TranslatableText text="Too volatile" />
-                        </p>
-                    </div>
-
-                    {/* Right: Smart Score */}
-                    <div className="p-8 text-center space-y-4 bg-white">
-                        <p className="text-xs font-bold text-purple-600 uppercase tracking-widest">
-                            <TranslatableText text="Smart Score" />
-                        </p>
-                        <div className="text-6xl font-black text-purple-600 tracking-tighter">
-                            3.7
-                        </div>
-                        <div className="flex justify-center">
-                             <Rating value={3.7} size={16} />
-                        </div>
-                    </div>
-                </div>
-                
-                {/* Insight Footer */}
-                <div className="bg-purple-600 p-4 text-center">
-                  <p className="text-white text-sm font-medium">
-                    <span className="opacity-80"><TranslatableText text="Result" />: </span> 
-                    <TranslatableText text="The score stays realistic (3.7) despite a perfect first review." />
-                  </p>
-                </div>
+               <div className="relative h-[400px] w-full bg-white overflow-hidden">
+                  <Image 
+                    src="/images/stabilizer.png"
+                    alt="Stabilizer Effect Graph"
+                    fill
+                    className="object-cover"
+                  />
               </div>
             </div>
 
@@ -102,58 +60,15 @@ export function RatingLogic() {
           {/* --- ROW 2: STRICT VISUALS --- */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             
-            {/* Visual Side (Redesigned Card) */}
+            {/* Visual Side (Image Placeholder) */}
             <div className="order-2 lg:order-1">
-               <div className="bg-gray-50 rounded-2xl overflow-hidden border border-gray-200">
-                
-                {/* Card Header */}
-                <div className="bg-gray-100/50 p-6 border-b border-gray-200 flex justify-between items-center">
-                    <div>
-                        <h4 className="font-bold text-gray-900"><TranslatableText text="High Performer Scenario" /></h4>
-                        <p className="text-xs text-gray-500"><TranslatableText text="4.8 Average Rating" /></p>
-                    </div>
-                    <div className="h-2 w-2 rounded-full bg-blue-500" />
-                </div>
-
-                {/* Comparison Grid */}
-                <div className="grid grid-cols-2 divide-x divide-gray-200">
-                    
-                    {/* Left: Standard */}
-                    <div className="p-8 text-center space-y-4 opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                            <TranslatableText text="Others Show" />
-                        </p>
-                        <div className="text-6xl font-black text-gray-300 tracking-tighter">
-                            5.0
-                        </div>
-                        <div className="flex justify-center gap-1">
-                            {[1,2,3,4,5].map(i => (
-                                <div key={i} className="w-3 h-3 bg-gray-300 rounded-full" />
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Right: Strict Score */}
-                    <div className="p-8 text-center space-y-4 bg-white">
-                        <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">
-                            <TranslatableText text="We Show" />
-                        </p>
-                        <div className="text-6xl font-black text-blue-600 tracking-tighter">
-                            4.5
-                        </div>
-                        <div className="flex justify-center">
-                             <Rating value={4.8} size={16} />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Insight Footer */}
-                <div className="bg-blue-600 p-4 text-center">
-                  <p className="text-white text-sm font-medium">
-                    <span className="opacity-80"><TranslatableText text="Result" />: </span>
-                    <TranslatableText text="We round down visually. 5 stars is reserved for true perfection." />
-                  </p>
-                </div>
+               <div className="relative h-[400px] w-full bg-white overflow-hidden">
+                  <Image 
+                    src="/images/strict-visual.png" 
+                    alt="Strict Visual Grading"
+                    fill
+                    className="object-cover"
+                  />
               </div>
             </div>
 

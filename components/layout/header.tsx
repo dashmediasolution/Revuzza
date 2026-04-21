@@ -37,27 +37,25 @@ export function Header({ user, variant = 'user' }: HeaderProps) {
 
   const isBusiness = variant === 'business';
 
-  const links: NavLink[] = isBusiness 
+  const links: NavLink[] = isBusiness
     ? [
-        { label: 'Features', href: '/business/features' },
-        { label: 'Plans', href: '/business/plans' },
-      ]
+      { label: 'Features', href: '/business/features' },
+      { label: 'Plans', href: '/business/plans' },
+    ]
     : [
-        { label: 'Write a Review', href: '/write-review' },
-        { label: 'Categories', href: '/categories' },
-        { label: 'Blog', href: '/blog' },
-      ];
+      { label: 'Write a Review', href: '/write-review' },
+      { label: 'Categories', href: '/categories' },
+      { label: 'Blog', href: '/blog' },
+    ];
 
   const logoHref = isBusiness ? '/business' : '/';
-  
-  // --- UPDATED LOGO COMPONENT ---
+
   const Logo = () => (
     <Link
       href={logoHref}
       className="flex items-center gap-2 transition-colors group select-none"
     >
       {isBusiness ? (
-        // Stacked Layout for Business
         <div className="flex flex-col items-start justify-center leading-none">
           <span className="text-2xl font-bold tracking-tight text-gray-900 group-hover:text-[#0ABED6] transition-colors">
             help
@@ -67,14 +65,12 @@ export function Header({ user, variant = 'user' }: HeaderProps) {
           </span>
         </div>
       ) : (
-        // Standard Layout for User
         <span className="text-2xl font-bold tracking-tight text-gray-900 group-hover:text-[#0ABED6] transition-colors">
           help
         </span>
       )}
     </Link>
   );
-  // ------------------------------
 
   React.useEffect(() => {
     if (open) {
@@ -90,79 +86,66 @@ export function Header({ user, variant = 'user' }: HeaderProps) {
   return (
     <header
       className={cn('sticky top-0 z-50 w-full border-b border-transparent transition-all duration-300', {
-        'bg-gray-100 border-gray-200': scrolled, 
+        'bg-white border-gray-200': scrolled,
         'bg-gray-100': !scrolled
       })}
     >
       <nav className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4">
-        
         <Logo />
 
         {/* --- DESKTOP VIEW --- */}
         <div className="hidden items-center gap-6 md:flex">
-          {links.map((link) => (
-            <Link
-              key={link.label}
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-[#0ABED6]",
-                scrolled ? "text-gray-700" : "text-gray-600"
-              )}
-              href={link.href}
-            >
-              {/* ✅ Translate Menu Links */}
-              <TranslatableText text={link.label} />
-            </Link>
-          ))}
+          <div className="flex items-center gap-6">
+            {links.map((link) => (
+              <Link
+                key={link.label}
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-[#0ABED6]",
+                  scrolled ? "text-gray-700" : "text-gray-600"
+                )}
+                href={link.href}
+              >
+                <TranslatableText text={link.label} />
+              </Link>
+            ))}
+          </div>
 
-          <div className="flex items-center gap-2 pl-4 border-l border-gray-200">
-            
-            {/* ✅ Add Language Selector (Desktop) */}
-            <div className="mr-2 scale-90">
-                <LanguageSelector />
-            </div>
-
+          <div className="flex items-center gap-4 pl-4 border-l border-gray-200">
             {user ? (
-              <div className="flex items-center gap-2">
-                <NotificationBell 
-                    isOpen={activeDropdown === 'notifications'} 
-                    onToggle={(isOpen) => setActiveDropdown(isOpen ? 'notifications' : null)}
-                /> 
-                <UserAccountNav 
-                    user={user} 
-                    open={activeDropdown === 'account'}
-                    onOpenChange={(isOpen) => setActiveDropdown(isOpen ? 'account' : null)}
+              <div className="flex items-center gap-4">
+                <NotificationBell
+                  isOpen={activeDropdown === 'notifications'}
+                  onToggle={(isOpen) => setActiveDropdown(isOpen ? 'notifications' : null)}
                 />
+                <UserAccountNav
+                  user={user}
+                  open={activeDropdown === 'account'}
+                  onOpenChange={(isOpen) => setActiveDropdown(isOpen ? 'account' : null)}
+                />
+                {/* Extreme Right Placement */}
+                <div className="pl-4 border-l border-gray-100">
+                  <LanguageSelector />
+                </div>
               </div>
             ) : (
-              <>
-                {isBusiness ? (
-                  <>
-                    <Link href="/business/login">
-                      <Button variant="ghost" className="font-semibold text-gray-700">
-                        <TranslatableText text="Log in" />
-                      </Button>
-                    </Link>
-                    <Link href="/business/signup?new=true">
-                      <Button className="rounded-full bg-[#0ABED6] hover:bg-[#0ABED6]/80 text-white px-6 font-semibold shadow-sm">
-                        <TranslatableText text="Create Free Account" />
-                      </Button>
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <Link href="/login">
-                      <Button variant="ghost" className="font-semibold text-gray-700">
-                         <TranslatableText text="Log In" />
-                      </Button>
-                    </Link>
-                    <Link href="/business">
-                      <Button className="rounded-full bg-[#0ABED6] hover:bg-[#0ABED6]/80 text-white px-6 font-semibold shadow-sm">
-                        <TranslatableText text="Sign in for Business" />
-                      </Button>
-                    </Link>
-                  </>
-                )}
-              </>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
+                  <Link href={isBusiness ? "/business/login" : "/login"}>
+                    <Button variant="ghost" className="font-semibold text-gray-700">
+                      <TranslatableText text={isBusiness ? "Log in" : "Log In"} />
+                    </Button>
+                  </Link>
+                  <Link href={isBusiness ? "/business/signup?new=true" : "/business"}>
+                    <Button className="rounded-full bg-[#0ABED6] hover:bg-[#0ABED6]/80 text-white px-6 font-semibold shadow-sm">
+                      <TranslatableText text={isBusiness ? "Create Free Account" : "Sign in for Business"} />
+                    </Button>
+                  </Link>
+                </div>
+                {/* Extreme Right Placement for Guest */}
+                <div className="pl-4 border-l border-gray-100">
+                  <LanguageSelector variant="header" />
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -184,7 +167,6 @@ export function Header({ user, variant = 'user' }: HeaderProps) {
       {/* --- MOBILE MENU CONTENT --- */}
       <MobileMenu open={open}>
         <div className="flex flex-col h-full p-6">
-
           {user && (
             <div className="mb-6 pb-6 border-b border-gray-100">
               <div className="flex items-center gap-3 mb-4">
@@ -202,11 +184,11 @@ export function Header({ user, variant = 'user' }: HeaderProps) {
             </div>
           )}
 
-          {/* ✅ Add Language Selector (Mobile - Top) */}
+          {/* Language Selector (Mobile - Top) */}
           <div className="mb-6">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Language</p>
             <div className="flex justify-start">
-               <LanguageSelector />
+              <LanguageSelector />
             </div>
           </div>
 
@@ -218,7 +200,6 @@ export function Header({ user, variant = 'user' }: HeaderProps) {
                 className="text-lg font-medium text-gray-600 hover:text-[#0ABED6] transition-colors"
                 onClick={() => setOpen(false)}
               >
-                {/* ✅ Translate Mobile Links */}
                 <TranslatableText text={link.label} />
               </Link>
             ))}
@@ -254,31 +235,31 @@ export function Header({ user, variant = 'user' }: HeaderProps) {
             ) : (
               <div className="flex flex-col gap-3">
                 {isBusiness ? (
-                   <>
-                     <Link href="/business/login" onClick={() => setOpen(false)}>
-                       <Button variant="outline" className="w-full h-12 text-base hover:bg-gray-200">
-                          <TranslatableText text="Log in" />
-                       </Button>
-                     </Link>
-                     <Link href="/business/signup?new=true" onClick={() => setOpen(false)}>
-                       <Button className="w-full h-12 text-base bg-[#0ABED6] hover:bg-[#0ABED6]/90 text-white">
-                         <TranslatableText text="Create Free Account" />
-                       </Button>
-                     </Link>
-                   </>
+                  <>
+                    <Link href="/business/login" onClick={() => setOpen(false)}>
+                      <Button variant="outline" className="w-full h-12 text-base hover:bg-gray-200">
+                        <TranslatableText text="Log in" />
+                      </Button>
+                    </Link>
+                    <Link href="/business/signup?new=true" onClick={() => setOpen(false)}>
+                      <Button className="w-full h-12 text-base bg-[#0ABED6] hover:bg-[#0ABED6]/90 text-white">
+                        <TranslatableText text="Create Free Account" />
+                      </Button>
+                    </Link>
+                  </>
                 ) : (
-                   <>
-                     <Link href="/login" onClick={() => setOpen(false)}>
-                       <Button variant="outline" className="w-full h-12 text-base hover:bg-gray-200">
-                          <TranslatableText text="Log In" />
-                       </Button>
-                     </Link>
-                     <Link href="/business" onClick={() => setOpen(false)}>
-                       <Button className="w-full h-12 text-base bg-[#0ABED6] hover:bg-[#0ABED6]/90 text-white">
-                         <TranslatableText text="Sign in for Business" />
-                       </Button>
-                     </Link>
-                   </>
+                  <>
+                    <Link href="/login" onClick={() => setOpen(false)}>
+                      <Button variant="outline" className="w-full h-12 text-base hover:bg-gray-200">
+                        <TranslatableText text="Log In" />
+                      </Button>
+                    </Link>
+                    <Link href="/business" onClick={() => setOpen(false)}>
+                      <Button className="w-full h-12 text-base bg-[#0ABED6] hover:bg-[#0ABED6]/90 text-white">
+                        <TranslatableText text="Sign in for Business" />
+                      </Button>
+                    </Link>
+                  </>
                 )}
               </div>
             )}
@@ -289,11 +270,7 @@ export function Header({ user, variant = 'user' }: HeaderProps) {
   );
 }
 
-type MobileMenuProps = React.ComponentProps<'div'> & {
-  open: boolean;
-};
-
-function MobileMenu({ open, children }: MobileMenuProps) {
+function MobileMenu({ open, children }: { open: boolean, children: React.ReactNode }) {
   if (!open || typeof window === 'undefined') return null;
 
   return createPortal(

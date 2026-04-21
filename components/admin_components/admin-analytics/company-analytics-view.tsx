@@ -5,17 +5,15 @@ import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   TrendingUp, MessageSquare, AlertTriangle, ThumbsUp, ThumbsDown,
   Lightbulb, Sparkles, BookOpen, Lock,
   Zap, Eye, MousePointerClick, DollarSign, Search, Info, MapPin,
   Scale, Phone, FileText, Users, ArrowUpCircle,
-  ChevronLeft, ChevronRight, Loader2, Filter // ✅ Added Filter Icon
+  ChevronLeft, ChevronRight, Loader2, Filter 
 } from "lucide-react";
 import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import { generateCompanyInsight } from "@/lib/search-action";
-import { MetricCard } from "@/components/admin_components/admin-analytics/metric-card";
 import {
   TooltipContent,
   TooltipProvider,
@@ -34,25 +32,16 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"; // ✅ Import Select
+} from "@/components/ui/select"; 
 
-interface CompanyAnalyticsViewProps {
-  company: any;
-  reviews: any[];
-  searchStats: any;
-  userRole?: string;
-  analyticsTier?: string; 
-  features?: string[];
-}
-
-// ... (Keep Helper Components InfoTooltip, HighlightedText, CustomChartTooltip, LockedFeatureOverlay UNCHANGED) ...
-const InfoTooltip = ({ text }: { text: string }) => (
+// --- HELPER COMPONENTS ---
+const InfoTooltip = ({ text, iconClass = "text-gray-400 hover:text-[#0ABED6]" }: { text: string, iconClass?: string }) => (
   <TooltipProvider delayDuration={300}>
     <UiTooltip>
       <TooltipTrigger asChild>
-        <Info className="h-3.5 w-3.5 text-gray-400 hover:text-blue-500 cursor-help transition-colors ml-1.5" />
+        <Info className={`h-4 w-4 cursor-help transition-colors ${iconClass}`} />
       </TooltipTrigger>
-      <TooltipContent className="max-w-[250px] bg-gray-900 text-white border-gray-800 text-xs leading-relaxed" side="top">
+      <TooltipContent className="max-w-[250px] bg-gray-900 text-white border-gray-800 text-xs leading-relaxed shadow-xl" side="top">
         {text}
       </TooltipContent>
     </UiTooltip>
@@ -66,34 +55,61 @@ const HighlightedText = ({ text, keywords, type }: { text: string, keywords: str
   const escapedSnippets = snippetsToHighlight.map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   const regex = new RegExp(`(${escapedSnippets.join('|')})`, 'gi');
   const parts = text.split(regex);
-  const highlightClass = type === 'positive' ? "bg-green-100 text-green-800 px-1 rounded font-medium" : type === 'negative' ? "bg-red-100 text-red-800 px-1 rounded font-medium" : "bg-amber-100 text-amber-900 px-1 rounded font-medium";
+  const highlightClass = type === 'positive' ? "bg-emerald-100 text-emerald-800 px-1 rounded font-bold" : type === 'negative' ? "bg-red-100 text-red-800 px-1 rounded font-bold" : "bg-amber-100 text-amber-900 px-1 rounded font-bold";
   return <span>{parts.map((part, i) => snippetsToHighlight.some(k => k.toLowerCase() === part.toLowerCase()) ? <span key={i} className={highlightClass}>{part}</span> : <span key={i}>{part}</span>)}</span>;
 };
 
 const CustomChartTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
-    return (<div className="bg-white p-4 border border-gray-100 shadow-xl rounded-xl text-sm min-w-[220px] z-50"><div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2"><p className="font-bold text-gray-900 capitalize">{data.topic}</p><span className="text-xs text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">Avg: {data.avgRating.toFixed(1)} ★</span></div><div className="space-y-2"><div className="flex justify-between items-center text-red-700"><span className="flex items-center gap-2 text-xs font-medium"><div className="w-2 h-2 rounded-full bg-red-500" /> Negative</span><span className="font-bold text-xs">{data.negPct}% <span className="text-gray-400 font-normal">({data.negCount})</span></span></div><div className="flex justify-between items-center text-amber-700"><span className="flex items-center gap-2 text-xs font-medium"><div className="w-2 h-2 rounded-full bg-amber-500" /> Neutral</span><span className="font-bold text-xs">{data.neuPct}% <span className="text-gray-400 font-normal">({data.neuCount})</span></span></div><div className="flex justify-between items-center text-green-700"><span className="flex items-center gap-2 text-xs font-medium"><div className="w-2 h-2 rounded-full bg-emerald-500" /> Positive</span><span className="font-bold text-xs">{data.posPct}% <span className="text-gray-400 font-normal">({data.posCount})</span></span></div></div><div className="mt-3 pt-2 border-t border-gray-100 flex justify-between text-gray-500 text-xs"><span>Total Mentions</span><span className="font-medium text-gray-900">{data.total}</span></div></div>);
+    return (<div className="bg-white p-4 border border-gray-100 shadow-xl rounded-2xl text-sm min-w-[220px] z-50"><div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-3"><p className="font-bold text-[#000032] capitalize">{data.topic}</p><span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded-full uppercase tracking-wider">Avg: {data.avgRating.toFixed(1)} ★</span></div><div className="space-y-3"><div className="flex justify-between items-center text-red-700"><span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider"><div className="w-2 h-2 rounded-full bg-red-500" /> Negative</span><span className="font-bold text-sm">{data.negPct}% <span className="text-red-400/70 font-medium">({data.negCount})</span></span></div><div className="flex justify-between items-center text-amber-700"><span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider"><div className="w-2 h-2 rounded-full bg-amber-500" /> Neutral</span><span className="font-bold text-sm">{data.neuPct}% <span className="text-amber-400/70 font-medium">({data.neuCount})</span></span></div><div className="flex justify-between items-center text-emerald-700"><span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider"><div className="w-2 h-2 rounded-full bg-emerald-500" /> Positive</span><span className="font-bold text-sm">{data.posPct}% <span className="text-emerald-400/70 font-medium">({data.posCount})</span></span></div></div><div className="mt-4 pt-3 border-t border-gray-100 flex justify-between text-gray-500 text-xs font-bold"><span>TOTAL MENTIONS</span><span className="text-[#000032]">{data.total}</span></div></div>);
   }
   return null;
 };
 
-// --- LOCKED OVERLAY COMPONENT ---
 function LockedFeatureOverlay({ title, description }: { title: string, description: string }) {
   return (
-    <div className="relative p-12 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50 flex flex-col items-center justify-center text-center min-h-[400px]">
+    <div className="relative p-12 border border-dashed border-gray-200 rounded-3xl bg-gray-50 flex flex-col items-center justify-center text-center min-h-[400px]">
         <div className="p-4 bg-white rounded-full shadow-sm mb-4">
             <Lock className="h-8 w-8 text-gray-400" />
         </div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
+        <h3 className="text-2xl font-bold text-[#000032] mb-2">{title}</h3>
         <p className="text-gray-500 max-w-md mb-6">{description}</p>
         <Link href="/business/billing">
-            <Button className="bg-[#0ABED6] hover:bg-[#09A8BD] text-white">
+            <Button className="rounded-full bg-[#0ABED6] hover:bg-[#09A8BD] text-white font-bold px-6 h-11">
                 <ArrowUpCircle className="h-4 w-4 mr-2" /> Upgrade Plan
             </Button>
         </Link>
     </div>
   );
+}
+
+function DashboardMetricCard({ title, value, helperText, icon, tooltip, showDivider = true, titleClass = "" }: any) {
+  return (
+    <div className={`flex-1 px-6 py-2 ${showDivider ? 'border-r border-gray-100 md:border-r' : ''}`}>
+        <div className="flex justify-between items-start mb-2">
+            {icon}
+            {tooltip && <InfoTooltip text={tooltip} />}
+        </div>
+        <div>
+            <div className="flex items-baseline gap-2">
+                <h3 className={`text-2xl font-bold text-gray-900 ${titleClass}`}>{value}</h3>
+            </div>
+            <p className="text-sm text-[#000032] mt-1 font-bold">{title}</p>
+            {helperText && <p className="text-[11px] text-gray-400 mt-0.5">{helperText}</p>}
+        </div>
+    </div>
+  );
+}
+
+// --- MAIN COMPONENT ---
+interface CompanyAnalyticsViewProps {
+  company: any;
+  reviews: any[];
+  searchStats: any;
+  userRole?: string;
+  analyticsTier?: string; 
+  features?: string[];
 }
 
 export function CompanyAnalyticsView({ company, reviews, analyticsTier = "BASIC", searchStats, userRole }: CompanyAnalyticsViewProps) {
@@ -119,8 +135,6 @@ export function CompanyAnalyticsView({ company, reviews, analyticsTier = "BASIC"
   const [tableSearch, setTableSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isTableLoading, setIsTableLoading] = useState(false);
-  
-  // ✅ NEW: Sort State (Default varies by sponsorship)
   const [tableSort, setTableSort] = useState(company.isSponsored ? "adClicks" : "clicks");
 
   // --- DATA PROCESSING (Metrics) ---
@@ -148,13 +162,12 @@ export function CompanyAnalyticsView({ company, reviews, analyticsTier = "BASIC"
       setAiLoading(false);
     };
     generateAi();
-  }, [reviews, company.id, searchStats]);
+  }, [reviews, company.id, searchStats, currentScore, nss, totalReviews]);
 
   // --- FETCH TABLE DATA ---
   const fetchTableData = useCallback(async () => {
     setIsTableLoading(true);
     try {
-        // ✅ Pass tableSort to server action
         const result = await getSearchAnalytics(company.id, currentPage, 5, tableSearch, tableSort);
         setTableData(result.topQueries);
         setTablePagination(result.pagination);
@@ -165,7 +178,6 @@ export function CompanyAnalyticsView({ company, reviews, analyticsTier = "BASIC"
     }
   }, [company.id, currentPage, tableSearch, tableSort]);
 
-  // Debounced fetch
   useEffect(() => {
     const timeoutId = setTimeout(() => {
         fetchTableData();
@@ -173,8 +185,7 @@ export function CompanyAnalyticsView({ company, reviews, analyticsTier = "BASIC"
     return () => clearTimeout(timeoutId);
   }, [fetchTableData]);
 
-  // ... (Chart Data Prep & Keyword Analysis & Grids Unchanged) ...
-  // (Paste the TrendData, KeywordMap, Review Filtering logic here from previous code to keep it concise)
+  // --- DATA PREP ---
   const trendData = [];
   let previousScore = 0;
   for (let i = 5; i >= 0; i--) {
@@ -190,17 +201,40 @@ export function CompanyAnalyticsView({ company, reviews, analyticsTier = "BASIC"
   }
 
   const keywordMap: Record<string, { total: number; positive: number; negative: number; neutral: number; sumRating: number }> = {};
+  
   reviews.forEach(r => {
     const rawKeywords = r.keywords || [];
+    
+    const seenTopics = new Set<string>();
+
     rawKeywords.forEach((entry: string) => {
       let topic = entry;
       let sentiment = 'neutral';
-      if (entry.includes(':')) { const parts = entry.split(':'); topic = parts[0]; sentiment = parts[1]; }
-      else { topic = entry; if (r.starRating >= 4) sentiment = 'positive'; else if (r.starRating <= 2) sentiment = 'negative'; }
-      if (!keywordMap[topic]) { keywordMap[topic] = { total: 0, positive: 0, negative: 0, neutral: 0, sumRating: 0 }; }
-      keywordMap[topic].total++;
-      keywordMap[topic].sumRating += r.starRating;
-      if (sentiment === 'positive') keywordMap[topic].positive++; else if (sentiment === 'negative') keywordMap[topic].negative++; else keywordMap[topic].neutral++;
+      
+      if (entry.includes(':')) { 
+          const parts = entry.split(':'); 
+          topic = parts[0].trim().toLowerCase(); 
+          sentiment = parts[1].trim().toLowerCase(); 
+      } else { 
+          topic = entry.trim().toLowerCase(); 
+          if (r.starRating >= 4) sentiment = 'positive'; 
+          else if (r.starRating <= 2) sentiment = 'negative'; 
+      }
+      
+      if (!seenTopics.has(topic)) {
+          seenTopics.add(topic); 
+
+          if (!keywordMap[topic]) { 
+              keywordMap[topic] = { total: 0, positive: 0, negative: 0, neutral: 0, sumRating: 0 }; 
+          }
+          
+          keywordMap[topic].total++;
+          keywordMap[topic].sumRating += r.starRating;
+          
+          if (sentiment === 'positive') keywordMap[topic].positive++; 
+          else if (sentiment === 'negative') keywordMap[topic].negative++; 
+          else keywordMap[topic].neutral++;
+      }
     });
   });
 
@@ -214,314 +248,475 @@ export function CompanyAnalyticsView({ company, reviews, analyticsTier = "BASIC"
   const topKeywords = [...keywordAnalysis].sort((a, b) => b.total - a.total).slice(0, 6);
   const riskAlert = keywordAnalysis.filter(k => k.total >= 1 && k.negPct >= 20).sort((a, b) => b.negPct - a.negPct)[0];
 
-  const latestPositive = [...reviews].filter(r => { 
-    const keywords = r.keywords || []; 
-    const hasSmartPositive = keywords.some((k: string) => k.toLowerCase().includes(':positive')); 
-    const hasLegacyPositive = r.starRating >= 4 && keywords.some((k: string) => !k.includes(':')); 
-    return hasSmartPositive || hasLegacyPositive; 
-  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3);
 
-  const latestNegative = [...reviews].filter(r => { 
-    const keywords = r.keywords || []; 
-    const hasSmartNegative = keywords.some((k: string) => k.toLowerCase().includes(':negative')); 
-    const hasLegacyNegative = r.starRating <= 2 && keywords.some((k: string) => !k.includes(':')); 
-    return hasSmartNegative || hasLegacyNegative; 
-  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3);
+  // ✅ SMART SENTIMENT CATEGORIZATION FOR GRIDS
+  const getReviewSentiment = (review: any) => {
+      const keywords = review.keywords || [];
+      const smartTags = keywords.filter((k: string) => k.includes(':'));
+      
+      if (smartTags.length > 0) {
+          const posCount = smartTags.filter((k: string) => k.toLowerCase().includes(':positive')).length;
+          const negCount = smartTags.filter((k: string) => k.toLowerCase().includes(':negative')).length;
+          
+          if (negCount > posCount) return 'negative';
+          if (posCount > negCount) return 'positive';
+          return 'neutral';
+      }
+      
+      // Legacy Fallback 
+      if (review.starRating >= 4) return 'positive';
+      if (review.starRating <= 2) return 'negative';
+      return 'neutral';
+  };
 
-  const latestNeutral = [...reviews].filter(r => { 
-    const keywords = r.keywords || []; 
-    const hasSmartNeutral = keywords.some((k: string) => k.toLowerCase().includes(':neutral')); 
-    const hasLegacyNeutral = (r.starRating > 2 && r.starRating < 4) && keywords.some((k: string) => !k.includes(':')); 
-    return hasSmartNeutral || hasLegacyNeutral; 
-  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3);
+  const latestPositive = [...reviews]
+      .filter(r => getReviewSentiment(r) === 'positive')
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 3);
 
+  const latestNegative = [...reviews]
+      .filter(r => getReviewSentiment(r) === 'negative')
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 3);
+
+  const latestNeutral = [...reviews]
+      .filter(r => getReviewSentiment(r) === 'neutral')
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 3);
+
+
+  const ctrValue = Number(searchStats?.totals?.ctr || 0);
+  const gaugeCircumference = 251.2; 
+  const ctrFillPercentage = Math.min(ctrValue / 50, 1);
+  const gaugeOffset = gaugeCircumference - (gaugeCircumference * ctrFillPercentage);
 
   return (
     <div className="space-y-8">
-      {/* --- SECTION 1: KPI CARDS (Unchanged) --- */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* ... (KPI Cards Code) ... */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium flex items-center">TrustScore <InfoTooltip text="Score based on review ratings and recency." /></CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent><div className="text-2xl font-bold">{currentScore.toFixed(1)}</div></CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium flex items-center">Net Sentiment <InfoTooltip text="Balance between positive and negative feedback." /></CardTitle>
-            {nss > 0 ? <ThumbsUp className="h-4 w-4 text-blue-500" /> : <ThumbsDown className="h-4 w-4 text-red-500" />}
-          </CardHeader>
-          <CardContent><div className="text-2xl font-bold">{nss}</div></CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium flex items-center">Total Reviews <InfoTooltip text="Total verified reviews collected." /></CardTitle>
-            <MessageSquare className="h-4 w-4 text-gray-500" />
-          </CardHeader>
-          <CardContent><div className="text-2xl font-bold">{totalReviews}</div></CardContent>
-        </Card>
-
-        <Card className={riskAlert ? "bg-red-50 border-red-100" : ""}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700 flex items-center">
-              Risk Alert <InfoTooltip text="Topics generating high negative sentiment." />
-            </CardTitle>
-            <AlertTriangle className={`h-4 w-4 ${riskAlert ? "text-red-600" : "text-gray-400"}`} />
-          </CardHeader>
-          <CardContent>
-            {riskAlert ? (
-              <>
-                <div className="text-xl font-bold text-red-700 capitalize">{riskAlert.topic}</div>
-                <p className="text-xs text-red-600/80">{riskAlert.negPct}% Negative</p>
-              </>
-            ) : (
-              <>
-                <div className="text-xl font-bold text-green-700">All Clear</div>
-                <p className="text-xs text-green-600/80">No major risks</p>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* --- SECTION 2: SEARCH TABLE (UPDATED) --- */}
-      {hasAdvancedAccess && searchStats && (
-        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-           {/* ... Metric Cards ... */}
-           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <MetricCard title="Search Impressions" value={searchStats.totals?.impressions || 0} helperText="Appearances in search." icon={<Eye className="h-4 w-4 text-blue-500" />} />
-              <MetricCard 
-                  title="Total Clicks" 
-                  value={searchStats.totals?.clicks || 0} 
-                  helperText={company.isSponsored ? `${searchStats.totals?.adClicks || 0} from Sponsored slots` : "Clicks to your profile."} 
-                  icon={<MousePointerClick className="h-4 w-4 text-green-500" />} 
+      
+      {/* --- SECTION 1: OVERVIEW CARD --- */}
+      <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col xl:flex-row gap-8">
+          {/* Main KPI Row */}
+          <div className="flex-1 flex flex-col md:flex-row gap-8 md:gap-0">
+              <DashboardMetricCard 
+                  title="TrustScore"
+                  tooltip="Score based on review ratings and recency."
+                  value={currentScore.toFixed(1)} 
+                  icon={<TrendingUp className="h-5 w-5 text-emerald-500" />}
               />
-              <MetricCard title="Click-Through Rate" value={`${searchStats.totals?.ctr || 0}%`} helperText="Percentage of clicks per impression." icon={<Zap className="h-4 w-4 text-yellow-500" />} />
-              <MetricCard title="Est. Ad Value" value={`$${searchStats.totals?.adSpend || "0.00"}`} helperText="Monetary value of organic traffic." icon={<DollarSign className="h-4 w-4 text-purple-500" />} />
-            </div>
-
-            <div className="lg:col-span-1 flex flex-col gap-4">
-              <div className="flex items-center gap-2"><Users className="h-5 w-5 text-orange-500" /><h2 className="text-xl font-bold text-gray-900">Lead Generation</h2></div>
-              <MetricCard title="Calls Generated" value={searchStats.totals?.calls || 0} helperText="CTA Button clicks" icon={<Phone className="h-4 w-4 text-purple-500" />} />
-              <MetricCard title="Leads Generated" value={searchStats.totals?.leads || 0} helperText="Quote requests" icon={<FileText className="h-4 w-4 text-orange-500" />} />
-            </div>
+              <DashboardMetricCard 
+                  title="Net Sentiment"
+                  tooltip="Balance between positive and negative feedback."
+                  value={nss} 
+                  icon={nss > 0 ? <ThumbsUp className="h-5 w-5 text-blue-500" /> : <ThumbsDown className="h-5 w-5 text-red-500" />}
+              />
+              <DashboardMetricCard 
+                  title="Total Reviews"
+                  tooltip="Total verified reviews collected."
+                  value={totalReviews} 
+                  icon={<MessageSquare className="h-5 w-5 text-[#0ABED6]" />}
+                  showDivider={false}
+              />
           </div>
 
-           <Card>
-            <CardHeader>
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <CardTitle className="flex items-center gap-2 text-base">
-                        <Search className="h-4 w-4 text-blue-500" /> Top Performing Search Queries
-                    </CardTitle>
+          {/* Risk Alert Side Card */}
+          <div className={`xl:w-1/3 rounded-2xl p-6 border ${riskAlert ? 'bg-red-50 border-red-100' : 'bg-emerald-50 border-emerald-100'} flex items-center gap-4`}>
+             <div className="h-12 w-12 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0">
+                <AlertTriangle className={`w-6 h-6 ${riskAlert ? 'text-red-500' : 'text-emerald-500'}`} />
+             </div>
+             <div className="w-full">
+                <div className="flex justify-between items-start">
+                    <h3 className="font-bold text-gray-900 text-sm">Risk Alert</h3>
+                    <InfoTooltip text="Topics generating high negative sentiment." />
+                </div>
+                {riskAlert ? (
+                  <>
+                    <p className="text-lg font-bold text-red-700 capitalize leading-tight mt-0.5">{riskAlert.topic}</p>
+                    <p className="text-xs font-bold text-red-600/80 uppercase tracking-wider">{riskAlert.negPct}% Negative</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg font-bold text-emerald-700 leading-tight mt-0.5">All Clear</p>
+                    <p className="text-xs font-bold text-emerald-600/80 uppercase tracking-wider">No Major Risks</p>
+                  </>
+                )}
+             </div>
+          </div>
+      </div>
+
+      {/* --- SECTION 2: SEARCH TABLE & METRICS (OUTSIDE TABS) --- */}
+      {hasAdvancedAccess && searchStats && (
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+           
+           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+               
+               {/* Left Side: 2 Rows of Metrics */}
+               <div className="xl:col-span-2 flex flex-col gap-8">
+                   
+                   {/* Top Row: Impressions & Clicks (2 columns) */}
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                       {/* Impressions */}
+                       <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+                           <div className="flex justify-between items-start mb-6">
+                               <div className="h-12 w-12 bg-blue-50 rounded-full flex items-center justify-center shrink-0">
+                                   <Eye className="h-6 w-6 text-blue-500" />
+                               </div>
+                               <InfoTooltip text="Total number of times your profile appeared in search results." />
+                           </div>
+                           <div>
+                               <h3 className="text-4xl font-black text-[#000032]">{searchStats.totals?.impressions || 0}</h3>
+                               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-2">Impressions</p>
+                           </div>
+                       </div>
+
+                       {/* Total Clicks */}
+                       <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+                           <div className="flex justify-between items-start mb-6">
+                               <div className="h-12 w-12 bg-emerald-50 rounded-full flex items-center justify-center shrink-0">
+                                   <MousePointerClick className="h-6 w-6 text-emerald-500" />
+                               </div>
+                               <InfoTooltip text={company.isSponsored ? "Clicks from sponsored positions." : "Total clicks on your profile."} />
+                           </div>
+                           <div>
+                               <h3 className="text-4xl font-black text-[#000032]">{searchStats.totals?.clicks || 0}</h3>
+                               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-2">Total Clicks</p>
+                           </div>
+                       </div>
+                   </div>
+
+                   {/* Bottom Row: Calls, Leads, Est Ad Value (3 columns) */}
+                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                        {/* Calls */}
+                        <div className="bg-[#111827] rounded-3xl p-6 border border-gray-800 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+                           <div className="flex justify-between items-start mb-6">
+                               <div className="h-10 w-10 bg-gray-800/80 rounded-full flex items-center justify-center shrink-0">
+                                   <Phone className="h-5 w-5 text-emerald-400" />
+                               </div>
+                               <InfoTooltip text="Direct calls generated from your profile." iconClass="text-gray-500 hover:text-white" />
+                           </div>
+                           <div>
+                               <h3 className="text-3xl font-black text-white">{searchStats.totals?.calls || 0}</h3>
+                               <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mt-1.5">Calls Generated</p>
+                           </div>
+                       </div>
+
+                       {/* Leads */}
+                       <div className="bg-[#111827] rounded-3xl p-6 border border-gray-800 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+                           <div className="flex justify-between items-start mb-6">
+                               <div className="h-10 w-10 bg-gray-800/80 rounded-full flex items-center justify-center shrink-0">
+                                   <FileText className="h-5 w-5 text-[#0ABED6]" />
+                               </div>
+                               <InfoTooltip text="Direct leads generated from your profile." iconClass="text-gray-500 hover:text-white" />
+                           </div>
+                           <div>
+                               <h3 className="text-3xl font-black text-white">{searchStats.totals?.leads || 0}</h3>
+                               <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mt-1.5">Leads Generated</p>
+                           </div>
+                       </div>
+
+                       {/* Ad Value */}
+                       <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+                           <div className="flex justify-between items-start mb-6">
+                               <div className="h-10 w-10 bg-purple-50 rounded-full flex items-center justify-center shrink-0">
+                                   <DollarSign className="h-5 w-5 text-purple-600" />
+                               </div>
+                               <InfoTooltip text="Estimated monetary value of your organic traffic if bought via Ads." />
+                           </div>
+                           <div>
+                               <h3 className="text-3xl font-black text-purple-600">${searchStats.totals?.adSpend || "0.00"}</h3>
+                               <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mt-1.5">Est. Ad Value</p>
+                           </div>
+                       </div>
+                   </div>
+
+               </div>
+
+               {/* Right Side: Total View Performance Card (CTR) */}
+               <div className="xl:col-span-1 bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex flex-col justify-center text-center h-full hover:shadow-md transition-shadow relative">
+                   <div className="absolute top-6 right-6">
+                        <InfoTooltip text="Click-Through Rate: Percentage of impressions that resulted in a click." />
+                   </div>
+                   
+                   <h2 className="text-2xl font-bold text-[#000032] mb-1.5 text-left">Total View Performance</h2>
+                   <p className="text-sm text-gray-500 text-left mb-10">Click - through performance for this period.</p>
+                   
+                   {/* SVG Semi-Circle Gauge */}
+                   <div className="relative w-full max-w-[220px] mx-auto aspect-[2/1] mb-4 flex items-end justify-center">
+                        <svg viewBox="0 0 200 110" className="absolute top-0 left-0 w-full h-full overflow-visible">
+                            {/* Background Arc */}
+                            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#f3f4f6" strokeWidth="18" strokeLinecap="round" />
+                            {/* Foreground Arc */}
+                            <path 
+                                d="M 20 100 A 80 80 0 0 1 180 100" 
+                                fill="none" 
+                                stroke="#5fa5d9" 
+                                strokeWidth="18" 
+                                strokeLinecap="round"
+                                strokeDasharray={251.2} 
+                                strokeDashoffset={gaugeOffset} 
+                                className="transition-all duration-1000 ease-out" 
+                            />
+                        </svg>
+                        <div className="flex flex-col items-center justify-end h-full pb-0 relative z-10 translate-y-3">
+                            <h3 className="text-4xl font-black text-[#000032]">{ctrValue}%</h3>
+                            <p className="text-sm font-medium text-gray-500 mt-1">Avg CTR</p>
+                        </div>
+                   </div>
+                   
+                   <p className="text-[15px] font-medium text-gray-500 mt-6 leading-relaxed px-2">
+                       Your click - through rate is performing well for this month.
+                   </p>
+               </div>
+
+           </div>
+
+           {/* Top Performing Queries Table */}
+           <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h2 className="text-xl font-bold text-[#000032] flex items-center gap-2">
+                            <Search className="h-5 w-5 text-[#0ABED6]" /> Top Search Queries
+                        </h2>
+                        <p className="text-sm text-gray-500 mt-1">What users search to find your profile.</p>
+                    </div>
                     
                     <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                        {/* ✅ NEW: Sorting Dropdown */}
                         <Select value={tableSort} onValueChange={(val) => { setTableSort(val); setCurrentPage(1); }}>
-                          <SelectTrigger className="w-full sm:w-[180px] h-9 bg-white">
-                            <Filter className="h-3.5 w-3.5 mr-2 text-gray-400" />
-                            <SelectValue placeholder="Sort by" />
-                          </SelectTrigger>
-                          <SelectContent align="end">
-                            <SelectItem value="impressions">Highest Impressions</SelectItem>
-                            
-                            {/* ✅ CONDITIONAL OPTIONS */}
-                            {company.isSponsored ? (
-                                <SelectItem value="adClicks">Highest Ad Clicks</SelectItem>
-                            ) : (
-                                <SelectItem value="clicks">Highest Clicks</SelectItem>
-                            )}
-                            
-                            <SelectItem value="ctr">Highest CTR</SelectItem>
-                          </SelectContent>
+                            <SelectTrigger className="w-full sm:w-[180px] h-10 rounded-full bg-gray-50 border-gray-200">
+                                <Filter className="h-4 w-4 mr-2 text-gray-500" />
+                                <SelectValue placeholder="Sort by" />
+                            </SelectTrigger>
+                            <SelectContent align="end" className="rounded-xl">
+                                <SelectItem value="impressions">Highest Impressions</SelectItem>
+                                {company.isSponsored ? (
+                                    <SelectItem value="adClicks">Highest Ad Clicks</SelectItem>
+                                ) : (
+                                    <SelectItem value="clicks">Highest Clicks</SelectItem>
+                                )}
+                                <SelectItem value="ctr">Highest CTR</SelectItem>
+                            </SelectContent>
                         </Select>
 
-                        {/* Search Input */}
                         <div className="relative w-full sm:w-64">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <Input 
                                 placeholder="Filter queries..." 
-                                className="pl-9 h-9"
+                                className="pl-10 h-10 rounded-full bg-gray-50 border-gray-200 focus-visible:ring-[#0ABED6]"
                                 value={tableSearch}
-                                onChange={(e) => {
-                                    setTableSearch(e.target.value);
-                                    setCurrentPage(1);
-                                }}
+                                onChange={(e) => { setTableSearch(e.target.value); setCurrentPage(1); }}
                             />
                         </div>
                     </div>
                 </div>
-            </CardHeader>
-            <CardContent>
-                <div className="relative overflow-x-auto min-h-[200px]">
-                
-                {isTableLoading && (
-                    <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center">
-                        <Loader2 className="h-6 w-6 text-blue-500 animate-spin" />
-                    </div>
-                )}
 
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-gray-50 text-gray-500">
-                    <tr>
-                        <th className="px-4 py-3 font-medium">Search Query / Location</th>
-                        <th className="px-4 py-3 font-medium">User Region</th>
-                        <th className="px-4 py-3 font-medium text-right">Impressions</th>
-                        
-                        {/* ✅ CONDITIONAL HEADER: Show Ad Clicks OR Total Clicks */}
-                        {company.isSponsored ? (
-                             <th className="px-4 py-3 font-medium text-right text-purple-600">Ad Clicks</th>
-                        ) : (
-                             <th className="px-4 py-3 font-medium text-right">Total Clicks</th>
-                        )}
-                        
-                        <th className="px-4 py-3 font-medium text-right">CTR</th>
-                    </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                    {tableData.length > 0 ? (
-                        tableData.map((q: any, i: number) => (
-                        <tr key={i} className="hover:bg-gray-50/50">
-                            <td className="px-4 py-3 align-top">
-                            <div className="flex flex-col">
-                                <span className="font-medium text-gray-900 capitalize text-sm">{q.query}</span>
-                                {(q.location && q.location !== 'Global') && (
-                                <div className="flex items-center gap-1 text-[11px] text-blue-600 bg-blue-50 w-fit px-1.5 py-0.5 rounded border border-blue-100 mt-1">
-                                    <Search className="h-3 w-3" /> In: {q.location}
-                                </div>
-                                )}
-                            </div>
-                            </td>
-                            <td className="px-4 py-3 align-top">
-                                {(!q.userRegion || q.userRegion === 'unknown') ? (
-                                    <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-400 px-2 py-1 rounded-md border border-gray-200">Unknown</span>
-                                ) : (
-                                    <div className="flex items-center gap-1.5 text-xs text-gray-700">
-                                    <div className="bg-gray-100 p-1 rounded-full text-gray-500"><MapPin className="h-3 w-3" /></div>
-                                    <span className="capitalize font-medium">{q.userRegion}</span>
-                                    </div>
-                                )}
-                            </td>
-                            <td className="px-4 py-3 text-right pt-3">{q.impressions}</td>
-                            
-                            {/* ✅ CONDITIONAL DATA CELL */}
-                            {company.isSponsored ? (
-                                <td className="px-4 py-3 text-right pt-3 font-bold text-purple-600 bg-purple-50/30">
-                                    {q.adClicks || 0}
-                                </td>
-                            ) : (
-                                <td className="px-4 py-3 text-right pt-3">
-                                    {q.clicks || 0}
-                                </td>
-                            )}
-
-                            <td className="px-4 py-3 text-right pt-3 text-blue-600 font-medium">
-                                {q.ctr ? q.ctr + '%' : (q.impressions > 0 ? ((q.clicks / q.impressions) * 100).toFixed(1) + '%' : '0.0%')}
-                            </td>
-                        </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td colSpan={company.isSponsored ? 5 : 5} className="px-4 py-8 text-center text-gray-400">
-                                {isTableLoading ? "Loading..." : "No matching queries found."}
-                            </td>
-                        </tr>
+                <div className="relative overflow-x-auto min-h-[300px]">
+                    {isTableLoading && (
+                        <div className="absolute inset-0 bg-white/80 z-10 flex items-center justify-center rounded-xl backdrop-blur-sm">
+                            <Loader2 className="h-8 w-8 text-[#0ABED6] animate-spin" />
+                        </div>
                     )}
-                    </tbody>
-                </table>
+
+                    <table className="w-full text-left min-w-[700px]">
+                        <thead>
+                            <tr className="border-b border-gray-100">
+                                <th className="px-4 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider w-[35%]">Search Query</th>
+                                <th className="px-4 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider w-[20%]">User Region</th>
+                                <th className="px-4 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right w-[15%]">Impressions</th>
+                                {company.isSponsored ? (
+                                    <th className="px-4 py-4 text-xs font-bold text-purple-400 uppercase tracking-wider text-right w-[15%]">Ad Clicks</th>
+                                ) : (
+                                    <th className="px-4 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right w-[15%]">Total Clicks</th>
+                                )}
+                                <th className="px-4 py-4 text-xs font-bold text-[#0ABED6] uppercase tracking-wider text-right w-[15%]">CTR</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                        {tableData.length > 0 ? (
+                            tableData.map((q: any, i: number) => (
+                            <tr key={i} className="hover:bg-gray-50/50 transition-colors">
+                                <td className="px-4 py-5 align-top">
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-[#000032] text-sm capitalize">{q.query}</span>
+                                        {(q.location && q.location !== 'Global') && (
+                                            <div className="flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 w-fit px-2 py-1 rounded-md mt-1.5 uppercase tracking-wider">
+                                                <Search className="h-3 w-3" /> In {q.location}
+                                            </div>
+                                        )}
+                                    </div>
+                                </td>
+                                <td className="px-4 py-5 align-top">
+                                    {(!q.userRegion || q.userRegion === 'unknown') ? (
+                                        <span className="inline-flex items-center text-[10px] font-bold bg-gray-100 text-gray-400 px-2 py-1 rounded-md uppercase tracking-wider">Unknown</span>
+                                    ) : (
+                                        <div className="flex items-center gap-2 text-sm text-gray-700">
+                                            <div className="bg-gray-100 p-1.5 rounded-full text-gray-500"><MapPin className="h-3.5 w-3.5" /></div>
+                                            <span className="capitalize font-bold">{q.userRegion}</span>
+                                        </div>
+                                    )}
+                                </td>
+                                <td className="px-4 py-5 text-right font-medium text-gray-600">{q.impressions}</td>
+                                
+                                {company.isSponsored ? (
+                                    <td className="px-4 py-5 text-right font-bold text-purple-600 bg-purple-50/30">
+                                        {q.adClicks || 0}
+                                    </td>
+                                ) : (
+                                    <td className="px-4 py-5 text-right font-medium text-gray-600">
+                                        {q.clicks || 0}
+                                    </td>
+                                )}
+
+                                <td className="px-4 py-5 text-right font-bold text-[#0ABED6]">
+                                    {q.ctr ? q.ctr + '%' : (q.impressions > 0 ? ((q.clicks / q.impressions) * 100).toFixed(1) + '%' : '0.0%')}
+                                </td>
+                            </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan={5} className="px-4 py-12 text-center text-gray-400 font-medium">
+                                    {isTableLoading ? "Loading..." : "No matching queries found."}
+                                </td>
+                            </tr>
+                        )}
+                        </tbody>
+                    </table>
                 </div>
 
-                <div className="flex items-center justify-between border-t mt-4 pt-4">
-                    <p className="text-xs text-gray-500">
+                <div className="flex items-center justify-between border-t border-gray-100 mt-6 pt-6">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">
                         Page {tablePagination.currentPage} of {tablePagination.totalPages}
                     </p>
                     <div className="flex items-center gap-2">
                         <Button 
                             variant="outline" 
-                            size="sm" 
+                            size="icon" 
                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                             disabled={currentPage === 1 || isTableLoading}
+                            className="rounded-full h-9 w-9 border-gray-200 text-gray-600"
                         >
                             <ChevronLeft className="h-4 w-4" />
                         </Button>
                         <Button 
                             variant="outline" 
-                            size="sm" 
+                            size="icon" 
                             onClick={() => setCurrentPage(p => Math.min(tablePagination.totalPages, p + 1))}
                             disabled={currentPage === tablePagination.totalPages || isTableLoading}
+                            className="rounded-full h-9 w-9 border-gray-200 text-gray-600"
                         >
                             <ChevronRight className="h-4 w-4" />
                         </Button>
                     </div>
                 </div>
-            </CardContent>
-           </Card>
+           </div>
         </div>
       )}
 
-      {/* --- SECTION 3: EXECUTIVE SUMMARY (Unchanged) --- */}
-      {/* ... (Paste Executive Summary & Tabs Sections Code from previous snippet) ... */}
+      {/* --- SECTION 3: EXECUTIVE SUMMARY --- */}
       {hasAdvancedAccess && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
-          <div className="lg:col-span-2 bg-gradient-to-r from-[#000032] to-[#000050] rounded-xl p-6 text-white shadow-lg relative overflow-hidden min-h-[180px]">
-            <div className="absolute top-0 right-0 p-6 opacity-10"><Sparkles className="h-32 w-32" /></div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="lg:col-span-2 bg-[#111827] rounded-3xl p-8 text-white relative overflow-hidden flex flex-col h-fit">
+            <div className="absolute top-[-20px] right-[-20px] opacity-10"><Sparkles className="h-48 w-48" /></div>
             <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-4"><Sparkles className="h-5 w-5 text-[#0ABED6]" /><h3 className="font-bold text-lg">{aiLoading ? "Analyzing Business Data..." : "Executive Business Summary"}</h3></div>
-              <p className="text-blue-100 leading-relaxed text-lg font-medium">"{aiData?.summary || "Insufficient data."}"</p>
+              <div className="flex items-center gap-2 mb-4">
+                  <Sparkles className="h-6 w-6 text-[#0ABED6]" />
+                  <h3 className="font-bold text-xl">{aiLoading ? "Analyzing Business Data..." : "Executive Business Summary"}</h3>
+              </div>
+              <p className="text-gray-300 leading-relaxed text-lg italic">
+                  "{aiData?.summary || "Insufficient data."}"
+              </p>
             </div>
           </div>
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm min-h-[180px]">
-            <div className="flex items-center gap-2 mb-4"><Lightbulb className="h-5 w-5 text-yellow-500" /><h3 className="font-bold text-gray-900">Strategic Suggestions</h3></div>
+
+          <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex flex-col h-fit">
+            <div className="flex items-center gap-2 mb-4">
+                <Lightbulb className="h-6 w-6 text-amber-500" />
+                <h3 className="font-bold text-[#000032] text-xl">Strategic Suggestions</h3>
+            </div>
             <ul className="space-y-3">
               {(aiData?.suggestions || ["Analyzing metrics..."]).map((s, i) => (
-                <li key={i} className="text-sm text-gray-600 flex gap-3 items-start"><span className="text-[#0ABED6] mt-1.5 text-[10px]">●</span><span>{s}</span></li>
+                <li key={i} className="text-sm text-gray-600 flex gap-3 items-start">
+                    <span className="text-[#0ABED6] mt-1.5 text-[10px]">●</span>
+                    <span className="leading-relaxed">{s}</span>
+                </li>
               ))}
             </ul>
           </div>
         </div>
       )}
 
-      {/* --- SECTION 4: TABS (Mixed Access) --- */}
-      <Tabs defaultValue="performance" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="performance">Performance Trends</TabsTrigger>
-          <TabsTrigger value="sentiment" className="flex items-center gap-2">
-            Sentiment Analysis {!hasAdvancedAccess && <Lock className="h-3 w-3 text-gray-400" />}
+      {/* --- SECTION 4: TABS --- */}
+      <Tabs defaultValue="performance" className="space-y-8 mt-4">
+        
+        {/* Modern Tabs List */}
+        <TabsList className="bg-gray-50/50 p-1 h-14 rounded-full border border-gray-200">
+          <TabsTrigger value="performance" className="rounded-full px-6 h-12 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#0ABED6] font-bold text-gray-500 transition-all">
+              Performance Trends
           </TabsTrigger>
-          <TabsTrigger value="comparison" className="flex items-center gap-2">
-            Comparison {!hasAdvancedAccess && <Lock className="h-3 w-3 text-gray-400" />}
+          <TabsTrigger value="sentiment" className="rounded-full px-6 h-12 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#0ABED6] font-bold text-gray-500 transition-all flex items-center gap-2">
+              Sentiment Analysis {!hasAdvancedAccess && <Lock className="h-3 w-3 opacity-50" />}
+          </TabsTrigger>
+          <TabsTrigger value="comparison" className="rounded-full px-6 h-12 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#0ABED6] font-bold text-gray-500 transition-all flex items-center gap-2">
+              Comparison {!hasAdvancedAccess && <Lock className="h-3 w-3 opacity-50" />}
           </TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Performance */}
-        <TabsContent value="performance" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card><CardHeader><CardTitle>TrustScore History</CardTitle></CardHeader><CardContent className="h-[300px]"><ResponsiveContainer width="100%" height="100%"><LineChart data={trendData}><CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey="month" /><YAxis domain={[0, 5]} /><Tooltip /><Line type="monotone" dataKey="score" stroke="#0ABED6" strokeWidth={3} /></LineChart></ResponsiveContainer></CardContent></Card>
-            <Card><CardHeader><CardTitle>Review Volume</CardTitle></CardHeader><CardContent className="h-[300px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={trendData}><CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey="month" /><YAxis /><Tooltip /><Bar dataKey="reviews" fill="#000032" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></CardContent></Card>
+        <TabsContent value="performance" className="space-y-8 animate-in fade-in">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+                <h3 className="font-bold text-[#000032] text-lg mb-6">TrustScore History</h3>
+                <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={trendData}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} dy={10} />
+                            <YAxis domain={[0, 5]} axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
+                            <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                            <Line type="monotone" dataKey="score" stroke="#0ABED6" strokeWidth={4} dot={{ r: 4, fill: '#0ABED6', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+                <h3 className="font-bold text-[#000032] text-lg mb-6">Review Volume</h3>
+                <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={trendData}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} dy={10} />
+                            <YAxis axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
+                            <Tooltip cursor={{fill: '#f9fafb'}} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                            <Bar dataKey="reviews" fill="#111827" radius={[6, 6, 0, 0]} maxBarSize={50} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 bg-purple-50 p-6 rounded-xl border border-purple-100 relative overflow-hidden flex flex-col justify-center">
-              <div className="flex items-center gap-2 mb-3 text-purple-800 font-bold z-10">
-                <Sparkles className="h-5 w-5" /> AI Trend Insight
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 bg-purple-50 p-8 rounded-3xl border border-purple-100 relative overflow-hidden flex flex-col h-fit">
+              <div className="flex items-center gap-2 mb-4 text-purple-900 font-bold z-10 text-lg">
+                <Sparkles className="h-6 w-6 text-purple-600" /> AI Trend Insight
               </div>
-              <p className="text-sm text-purple-900/80 leading-relaxed font-medium z-10">
+              <p className="text-base text-purple-900/80 leading-relaxed font-medium z-10">
                 {aiLoading ? "Analyzing trends..." : (aiData?.trendAnalysis || "Not enough historical data to analyze trends yet.")}
               </p>
-              <div className="absolute top-[-20px] right-[-20px] opacity-5"><Sparkles className="h-32 w-32 text-purple-600" /></div>
+              <div className="absolute top-[-20px] right-[-20px] opacity-10"><Sparkles className="h-40 w-40 text-purple-600" /></div>
             </div>
-            <div className="lg:col-span-1 bg-blue-50 p-6 rounded-xl border border-blue-100 h-full flex flex-col justify-center">
-               <div className="flex items-center gap-2 mb-3 text-blue-800 font-bold"><BookOpen className="h-4 w-4" /> How to read charts</div>
-               <p className="text-sm text-blue-800/80">Monitor your TrustScore closely. Sudden drops often indicate a recent influx of negative reviews that need attention.</p>
+            
+            <div className="lg:col-span-1 bg-blue-50 p-8 rounded-3xl border border-blue-100 flex flex-col h-fit">
+               <div className="flex items-center gap-2 mb-4 text-blue-900 font-bold text-lg">
+                   <BookOpen className="h-5 w-5 text-blue-600" /> How to read charts
+               </div>
+               <p className="text-sm text-blue-900/80 leading-relaxed">
+                   Monitor your TrustScore closely. Sudden drops often indicate a recent influx of negative reviews that need immediate attention and response.
+               </p>
             </div>
           </div>
         </TabsContent>
 
-        {/* Tab 2: Sentiment (Locked for Free) */}
-        <TabsContent value="sentiment" className="space-y-6">
+        {/* Tab 2: Sentiment Analysis */}
+        <TabsContent value="sentiment" className="space-y-8 animate-in fade-in">
             {!hasAdvancedAccess ? (
                 <LockedFeatureOverlay 
                     title="Unlock Sentiment Analysis" 
@@ -530,63 +725,61 @@ export function CompanyAnalyticsView({ company, reviews, analyticsTier = "BASIC"
             ) : (
                 <>
                 {/* 1. Stacked Sentiment Graph */}
-                <Card className="col-span-1 lg:col-span-2 shadow-sm border-gray-200">
-                    <CardHeader>
-                    <CardTitle className="flex items-center gap-2">Topic Sentiment Distribution</CardTitle>
-                    <CardDescription>See exactly how customers feel about key aspects of your business.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                    <div className="h-[400px] w-full mt-2">
+                <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+                    <div className="mb-6">
+                        <h2 className="text-xl font-bold text-[#000032]">Topic Sentiment Distribution</h2>
+                        <p className="text-sm text-gray-500 mt-1">See exactly how customers feel about key aspects of your business.</p>
+                    </div>
+                    <div className="h-[400px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={topKeywords} margin={{ top: 20, right: 30, left: 20, bottom: 5 }} barCategoryGap="30%">
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
                             <XAxis dataKey="topic" tick={{ fontSize: 12, fill: '#6b7280', textTransform: 'capitalize' } as any} axisLine={false} tickLine={false} dy={10} />
                             <YAxis unit="%" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }} />
                             <Tooltip content={<CustomChartTooltip />} cursor={{ fill: '#f9fafb' }} />
-                            <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }} iconType="circle" />
-                            <Bar dataKey="negPct" name="Negative" stackId="a" fill="#ef4444" radius={[0, 0, 4, 4]} maxBarSize={60} />
+                            <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '12px', fontWeight: 'bold' }} iconType="circle" />
+                            <Bar dataKey="negPct" name="Negative" stackId="a" fill="#ef4444" radius={[0, 0, 6, 6]} maxBarSize={60} />
                             <Bar dataKey="neuPct" name="Neutral" stackId="a" fill="#f59e0b" maxBarSize={60} />
-                            <Bar dataKey="posPct" name="Positive" stackId="a" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={60} />
+                            <Bar dataKey="posPct" name="Positive" stackId="a" fill="#10b981" radius={[6, 6, 0, 0]} maxBarSize={60} />
                         </BarChart>
                         </ResponsiveContainer>
                     </div>
-                    </CardContent>
-                </Card>
+                </div>
 
                 {/* 2. AI Sentiment & Actions */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2 bg-indigo-50 p-6 rounded-xl border border-indigo-100 relative overflow-hidden flex flex-col justify-center min-h-[160px]">
-                    <div className="flex items-center gap-2 mb-3 text-indigo-900 font-bold z-10">
-                        <Sparkles className="h-5 w-5 text-indigo-600 fill-indigo-200" /> AI Sentiment Analysis
-                    </div>
-                    <p className="text-sm text-indigo-900/80 leading-relaxed font-medium z-10">
-                        {aiLoading ? "Analyzing sentiment..." : (aiData?.sentimentAnalysis || "Insufficient data to analyze sentiment depth.")}
-                    </p>
-                    <div className="absolute top-[-20px] right-[-20px] opacity-5"><Sparkles className="h-32 w-32 text-indigo-600" /></div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 bg-indigo-50 p-8 rounded-3xl border border-indigo-100 relative overflow-hidden flex flex-col h-fit">
+                        <div className="flex items-center gap-2 mb-4 text-indigo-900 font-bold z-10 text-lg">
+                            <Sparkles className="h-6 w-6 text-indigo-600 fill-indigo-200" /> AI Sentiment Analysis
+                        </div>
+                        <p className="text-base text-indigo-900/80 leading-relaxed font-medium z-10">
+                            {aiLoading ? "Analyzing sentiment..." : (aiData?.sentimentAnalysis || "Insufficient data to analyze sentiment depth.")}
+                        </p>
+                        <div className="absolute top-[-20px] right-[-20px] opacity-10"><Sparkles className="h-40 w-40 text-indigo-600" /></div>
                     </div>
 
-                    <div className="bg-white p-6 rounded-xl border border-gray-200 h-full flex flex-col justify-center min-h-[160px]">
-                    <div className="flex items-center gap-2 mb-3 text-gray-900 font-bold">
-                        <Lightbulb className="h-5 w-5 text-yellow-500" /> Recommended Actions
-                    </div>
-                    <ul className="space-y-2">
-                        {(aiData?.sentimentActions || ["Gather more reviews to unlock actions."]).slice(0, 3).map((action, i) => (
-                        <li key={i} className="text-xs text-gray-600 flex gap-2 items-start"><span className="text-indigo-500 mt-0.5 text-[10px] shrink-0">●</span><span>{action}</span></li>
-                        ))}
-                    </ul>
+                    <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col h-fit">
+                        <div className="flex items-center gap-2 mb-4 text-[#000032] font-bold text-lg">
+                            <Lightbulb className="h-6 w-6 text-amber-500" /> Recommended Actions
+                        </div>
+                        <ul className="space-y-3">
+                            {(aiData?.sentimentActions || ["Gather more reviews to unlock actions."]).slice(0, 3).map((action, i) => (
+                            <li key={i} className="text-sm text-gray-600 flex gap-3 items-start"><span className="text-indigo-500 mt-1.5 text-[10px] shrink-0">●</span><span className="leading-relaxed">{action}</span></li>
+                            ))}
+                        </ul>
                     </div>
                 </div>
 
                 {/* 3. Review Grids (Positive / Neutral / Negative) */}
-                <div className="space-y-8 mt-6">
+                <div className="space-y-12 mt-8">
                     {/* Positive Grid */}
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
-                        <ThumbsUp className="h-5 w-5 text-green-600" />
+                      <h3 className="text-xl font-bold text-[#000032] flex items-center gap-2 mb-6">
+                        <ThumbsUp className="h-6 w-6 text-emerald-500" />
                         Top Positive Mentions
                       </h3>
                       {latestPositive.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                           {latestPositive.map((r: any, i: number) => (
                             <div key={`${r.id}-${i}`} className="h-full">
                               <ReviewCard
@@ -594,8 +787,8 @@ export function CompanyAnalyticsView({ company, reviews, analyticsTier = "BASIC"
                                 userInitials={r.user?.name?.[0] || "A"}
                                 userAvatarUrl={r.user?.image}
                                 rating={r.starRating}
-                                className="w-full h-full max-w-none shadow-sm hover:shadow-md transition-shadow"
-                                textClassName="line-clamp-6"
+                                className="w-full h-full max-w-none shadow-sm rounded-3xl border border-gray-100"
+                                textClassName="line-clamp-6 text-gray-600"
                                 reviewText={<HighlightedText
                                   text={r.comment || r.text || r.content}
                                   keywords={r.keywords?.filter((k: string) =>
@@ -614,7 +807,7 @@ export function CompanyAnalyticsView({ company, reviews, analyticsTier = "BASIC"
                           ))}
                         </div>
                       ) : (
-                        <div className="p-8 bg-gray-50 rounded-xl border border-dashed border-gray-200 text-center text-gray-400">
+                        <div className="p-12 bg-gray-50 rounded-3xl border border-dashed border-gray-200 text-center text-gray-400 font-medium">
                           No positive reviews with specific keywords found recently.
                         </div>
                       )}
@@ -622,12 +815,12 @@ export function CompanyAnalyticsView({ company, reviews, analyticsTier = "BASIC"
 
                     {/* Neutral Grid */}
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
-                        <Scale className="h-5 w-5 text-amber-500" />
+                      <h3 className="text-xl font-bold text-[#000032] flex items-center gap-2 mb-6">
+                        <Scale className="h-6 w-6 text-amber-500" />
                         Neutral / Balanced Feedback
                       </h3>
                       {latestNeutral.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                           {latestNeutral.map((r: any, i: number) => (
                             <div key={`${r.id}-${i}`} className="h-full">
                               <ReviewCard
@@ -635,8 +828,8 @@ export function CompanyAnalyticsView({ company, reviews, analyticsTier = "BASIC"
                                 userInitials={r.user?.name?.[0] || "A"}
                                 userAvatarUrl={r.user?.image}
                                 rating={r.starRating}
-                                className="w-full h-full max-w-none shadow-sm hover:shadow-md transition-shadow"
-                                textClassName="line-clamp-6"
+                                className="w-full h-full max-w-none shadow-sm rounded-3xl border border-gray-100"
+                                textClassName="line-clamp-6 text-gray-600"
                                 reviewText={<HighlightedText
                                   text={r.comment || r.text || r.content}
                                   keywords={r.keywords?.filter((k: string) =>
@@ -655,7 +848,7 @@ export function CompanyAnalyticsView({ company, reviews, analyticsTier = "BASIC"
                           ))}
                         </div>
                       ) : (
-                        <div className="p-8 bg-gray-50 rounded-xl border border-dashed border-gray-200 text-center text-gray-400">
+                        <div className="p-12 bg-gray-50 rounded-3xl border border-dashed border-gray-200 text-center text-gray-400 font-medium">
                           No neutral or balanced feedback found recently.
                         </div>
                       )}
@@ -663,17 +856,17 @@ export function CompanyAnalyticsView({ company, reviews, analyticsTier = "BASIC"
 
                     {/* Negative Grid */}
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
-                        <AlertTriangle className="h-5 w-5 text-red-600" />
+                      <h3 className="text-xl font-bold text-[#000032] flex items-center gap-2 mb-6">
+                        <AlertTriangle className="h-6 w-6 text-red-500" />
                         Critical Issues
                       </h3>
                       {latestNegative.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                           {latestNegative.map((r: any, i: number) => (
                             <div key={`${r.id}-${i}`} className="h-full relative group">
                               {r.starRating >= 4 && (
-                                <div className="absolute bottom-7 right-4 z-10 bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-orange-200">
-                                  Mixed Sentiment
+                                <div className="absolute bottom-7 right-4 z-10 bg-orange-100 text-orange-700 text-[10px] font-bold px-3 py-1 rounded-full border border-orange-200 shadow-sm">
+                                  MIXED SENTIMENT
                                 </div>
                               )}
                               <ReviewCard
@@ -681,8 +874,8 @@ export function CompanyAnalyticsView({ company, reviews, analyticsTier = "BASIC"
                                 userInitials={r.user?.name?.[0] || "A"}
                                 userAvatarUrl={r.user?.image}
                                 rating={r.starRating}
-                                className="w-full h-full max-w-none shadow-sm hover:shadow-md transition-shadow"
-                                textClassName="line-clamp-6"
+                                className="w-full h-full max-w-none shadow-sm rounded-3xl border border-gray-100"
+                                textClassName="line-clamp-6 text-gray-600"
                                 reviewText={<HighlightedText
                                   text={r.comment || r.text || r.content}
                                   keywords={r.keywords?.filter((k: string) =>
@@ -701,7 +894,7 @@ export function CompanyAnalyticsView({ company, reviews, analyticsTier = "BASIC"
                           ))}
                         </div>
                       ) : (
-                        <div className="p-8 bg-gray-50 rounded-xl border border-dashed border-gray-200 text-center text-gray-400">
+                        <div className="p-12 bg-emerald-50 rounded-3xl border border-dashed border-emerald-200 text-center text-emerald-600 font-bold">
                           No critical issues found recently. Great job!
                         </div>
                       )}
@@ -711,8 +904,8 @@ export function CompanyAnalyticsView({ company, reviews, analyticsTier = "BASIC"
             )}
         </TabsContent>
 
-        {/* Tab 3: Comparison (Locked for Free) */}
-        <TabsContent value="comparison" className="space-y-6">
+        {/* Tab 4: Comparison */}
+        <TabsContent value="comparison" className="space-y-8 animate-in fade-in">
             {!hasAdvancedAccess ? (
                 <LockedFeatureOverlay 
                     title="Unlock Competitor Comparison" 

@@ -2,7 +2,6 @@
 
 import { useActionState } from 'react';
 import { updateCompanyProfile } from "@/lib/actions";
-import { updateCompanyType, addShowcaseItem, deleteShowcaseItem } from "@/lib/showcase-actions"; 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,14 +14,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { 
-  Loader2, ImageIcon, Save, MapPin, Phone, Mail, Tag, 
-
+  Loader2, ImageIcon, Save, MapPin, Phone, Mail, Globe, UploadCloud, X, Sparkles
 } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { useForm } from "react-hook-form";
 import { Country, State, City }  from 'country-state-city';
 import { Prisma } from "@prisma/client"; 
 
@@ -42,34 +39,13 @@ interface SettingsFormProps {
   categories: CategoryWithSubs[];
 }
 
-// Simple Image Upload Mock
-const ImageUploadPlaceholder = ({ onUpload }: { onUpload: (url: string) => void }) => (
-    <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50" onClick={() => {
-        const url = prompt("Enter Image URL (Mock Upload):");
-        if (url) onUpload(url);
-    }}>
-      <ImageIcon className="h-6 w-6 mx-auto text-gray-400" />
-      <span className="text-xs text-gray-500">Click to Upload Image</span>
-    </div>
-);
-
 export function SettingsForm({ company, categories }: SettingsFormProps) {
   const [state, formAction, isPending] = useActionState(updateCompanyProfile, null);
   const router = useRouter();
+  
+  // Image State
   const [logoPreview, setLogoPreview] = useState<string | null>(company.logoImage);
-  
-  // Showcase State
-  const [showcasePending, setShowcasePending] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [newItemImages, setNewItemImages] = useState<string[]>([]);
-  
-  // Access Logic
-  const hasAccess = company.plan === "GROWTH" || company.plan === "SCALE" || company.plan === "CUSTOM";
-  const companyType = company.companyType || "SERVICE";
-
-  const { register: registerItem, handleSubmit: handleSubmitItem, reset: resetItem } = useForm({
-    defaultValues: { name: "", description: "", linkUrl: "" }
-  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Category State
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(company.categoryId || "");
@@ -87,6 +63,9 @@ export function SettingsForm({ company, categories }: SettingsFormProps) {
   const countries = useMemo(() => Country.getAllCountries(), []);
   const states = useMemo(() => selectedCountryISO ? State.getStatesOfCountry(selectedCountryISO) : [], [selectedCountryISO]);
   const cities = useMemo(() => selectedStateISO ? City.getCitiesOfState(selectedCountryISO, selectedStateISO) : [], [selectedCountryISO, selectedStateISO]);
+
+  // Fetch Plan for Badge
+  const userPlan = company.plan || "FREE";
 
   // Hydrate Location
   useEffect(() => {
@@ -108,7 +87,7 @@ export function SettingsForm({ company, categories }: SettingsFormProps) {
       }
     }
     if (company.city) setSelectedCityName(company.city);
-  }, []); 
+  }, [company.country, company.state, company.city, countries]); 
 
   useEffect(() => {
     if (state?.success) {
@@ -119,43 +98,19 @@ export function SettingsForm({ company, categories }: SettingsFormProps) {
     }
   }, [state, router]);
 
+  // Actions
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) setLogoPreview(URL.createObjectURL(file));
   };
 
-  const onTypeChange = async (val: string) => {
-    toast.promise(updateCompanyType(company.id, val as any), {
-        loading: "Updating business type...",
-        success: "Updated successfully",
-        error: "Failed to update"
-    });
-  };
-
-  const onItemSubmit = async (data: any) => {
-    setShowcasePending(true);
-    // data includes name, description, and linkUrl
-    const result = await addShowcaseItem(company.id, { ...data, images: newItemImages });
-    if (result.success) {
-        toast.success("Item added successfully");
-        setModalOpen(false);
-        resetItem();
-        setNewItemImages([]);
-    } else {
-        toast.error("Failed to add item");
-    }
-    setShowcasePending(false);
-  };
-
-  const handleDeleteItem = async (id: string) => {
-    if(confirm("Are you sure?")) {
-        await deleteShowcaseItem(id);
-        toast.success("Item deleted");
-    }
+  const handleRemoveLogo = () => {
+    setLogoPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
-    <form action={formAction} className="space-y-8 max-w-6xl">
+    <form action={formAction} className="space-y-8">
       
       {/* HIDDEN INPUTS */}
       <input type="hidden" name="country" value={countries.find(c => c.isoCode === selectedCountryISO)?.name || ""} />
@@ -165,167 +120,235 @@ export function SettingsForm({ company, categories }: SettingsFormProps) {
       <input type="hidden" name="categoryId" value={selectedCategoryId} />
       <input type="hidden" name="subCategoryId" value={selectedSubCategoryId} />
 
-      {/* --- BRANDING --- */}
-      <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-6">
+      {/* --- HEADER BAR --- */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-6">
         <div>
-           <h3 className="text-lg font-bold text-[#000032] flex items-center gap-2">
-             <ImageIcon className="h-5 w-5 text-[#0ABED6]" /> Branding
-           </h3>
-           <p className="text-sm text-gray-500">Update your company logo.</p>
+            <h1 className="text-3xl font-bold text-[#111827]">Edit Profile</h1>
+            <p className="text-gray-500 mt-1">Update your contact details, location, and business information visible to the public.</p>
         </div>
-        <div className="space-y-3">
-            <Label>Company Logo</Label>
-            <div className="flex items-center gap-6">
-                <div className="relative w-24 h-24 rounded-full border border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center shrink-0 shadow-sm">
-                {logoPreview ? (
-                    <Image src={logoPreview} alt="Logo" fill className="object-cover" />
-                ) : (
-                    <ImageIcon className="h-8 w-8 text-gray-300" />
-                )}
-                </div>
-                <div className="space-y-2">
-                    <div className="relative overflow-hidden inline-block">
-                        <input type="file" name="logo" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" onChange={handleImageChange} />
-                        <Button type="button" variant="ghost" size="sm">Upload New Logo</Button>
-                    </div>
-                    <p className="text-xs text-gray-400">Recommended: 400x400px (JPG, PNG)</p>
-                </div>
+        
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            {/* ✅ GHOST PLAN BADGE */}
+            <div className="flex items-center gap-1.5 px-2 text-amber-500">
+                <Sparkles className="h-4 w-4 fill-amber-500/20" />
+                <span className="text-sm font-bold uppercase tracking-widest">{userPlan}</span>
             </div>
+
+            {/* ✅ VERTICAL SEPARATOR */}
+            <div className="hidden md:block h-6 w-px bg-gray-300 mx-1" />
+
+            <Button 
+                type="submit" 
+                disabled={isPending} 
+                className="rounded-xl font-bold h-11 px-6 bg-[#0ABED6] hover:bg-[#09A8BD] text-white shadow-sm flex-1 md:flex-none"
+            >
+                {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                Save All Changes
+            </Button>
         </div>
       </div>
 
-      {/* --- BUSINESS DETAILS --- */}
-      <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-6">
-        <div>
-           <h3 className="text-lg font-bold text-[#000032] flex items-center gap-2">
-             <Tag className="h-5 w-5 text-[#0ABED6]" /> Business Details
-           </h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-           <div className="grid gap-2">
-              <Label>Category</Label>
-              <Select value={selectedCategoryId} onValueChange={(val) => { setSelectedCategoryId(val); setSelectedSubCategoryId(""); }}>
-                <SelectTrigger className="bg-white"><SelectValue placeholder="Select Category" /></SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-           </div>
-           <div className="grid gap-2">
-              <Label>Subcategory</Label>
-              <Select value={selectedSubCategoryId} onValueChange={setSelectedSubCategoryId} disabled={!selectedCategoryId}>
-                <SelectTrigger className="bg-white"><SelectValue placeholder="Select Subcategory" /></SelectTrigger>
-                <SelectContent>
-                  {activeSubCategories.map((sub) => <SelectItem key={sub.id} value={sub.id}>{sub.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-           </div>
-           <div className="grid gap-2 md:col-span-2">
-              <Label htmlFor="description">About the Business</Label>
-              <Textarea 
-                id="description" 
-                name="description" 
-                defaultValue={company.briefIntroduction || ""} 
-                className="min-h-[120px]"
-              />
-           </div>
-        </div>
-      </div>
+      {/* --- TWO COLUMN LAYOUT --- */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
+          
+          {/* LEFT COLUMN (1/3) */}
+          <div className="xl:col-span-1 space-y-8">
+              
+              {/* BRANDING CARD */}
+              <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+                  <div>
+                      <h2 className="text-xl font-bold text-[#000032]">Branding</h2>
+                      <p className="text-sm text-gray-500 mt-1">Update your company logo and visual identity.</p>
+                  </div>
+                  
+                  <div className="flex items-start gap-5">
+                      {/* Square Image Box like Figma */}
+                      <div className="relative w-24 h-24 rounded-2xl border border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center shrink-0">
+                          {logoPreview ? (
+                              <Image src={logoPreview} alt="Logo" fill className="object-cover" />
+                          ) : (
+                              <ImageIcon className="h-8 w-8 text-gray-300" />
+                          )}
+                      </div>
+                      
+                      <div className="space-y-3 flex-1">
+                          <Label className="text-sm font-bold text-gray-700">Company Logo</Label>
+                          <div className="flex flex-wrap items-center gap-2">
+                              {/* Upload Button */}
+                              <div className="relative overflow-hidden inline-block">
+                                  <input 
+                                      type="file" 
+                                      name="logo" 
+                                      accept="image/*" 
+                                      ref={fileInputRef}
+                                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" 
+                                      onChange={handleImageChange} 
+                                  />
+                                  <Button type="button" variant="outline" className="font-bold border-gray-200 text-gray-700 rounded-lg h-9 px-4">
+                                      <UploadCloud className="h-4 w-4 mr-2" /> Upload New Logo
+                                  </Button>
+                              </div>
+                              
+                              {/* Remove Button */}
+                              <Button 
+                                  type="button" 
+                                  variant="ghost" 
+                                  onClick={handleRemoveLogo}
+                                  className="font-bold text-red-500 bg-red-50 hover:bg-red-100 hover:text-red-600 rounded-lg h-9 px-4"
+                              >
+                                  <X className="h-4 w-4 mr-2" /> Remove
+                              </Button>
+                          </div>
+                          <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wider">Recommended: 400x400px (JPG, PNG)</p>
+                      </div>
+                  </div>
+              </div>
 
-      {/* --- LOCATION --- */}
-      <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-6">
-        <div>
-           <h3 className="text-lg font-bold text-[#000032] flex items-center gap-2">
-             <MapPin className="h-5 w-5 text-[#0ABED6]" /> Location
-           </h3>
-        </div>
-        <div className="grid gap-4">
-           <div className="grid gap-2">
-              <Label htmlFor="address">Address</Label>
-              <Input id="address" name="address" defaultValue={company.address || ""} placeholder="123 Business Rd, Suite 100" />
-           </div>
-           <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                 <Label>Country</Label>
-                 <Select value={selectedCountryISO} onValueChange={(val) => { setSelectedCountryISO(val); setSelectedStateISO(""); setSelectedCityName(""); }}>
-                   <SelectTrigger className="bg-white"><SelectValue placeholder={company.country || ""}/></SelectTrigger>
-                   <SelectContent>
-                     {countries.map((c) => <SelectItem key={c.isoCode} value={c.isoCode}>{c.name}</SelectItem>)}
-                   </SelectContent>
-                 </Select>
-              </div>
-              <div className="grid gap-2">
-                 <Label>State / Province</Label>
-                 <Select value={selectedStateISO } onValueChange={(val) => { setSelectedStateISO(val); setSelectedCityName(""); }} disabled={!selectedCountryISO}>
-                   <SelectTrigger className="bg-white"><SelectValue placeholder={company.state || ""} /></SelectTrigger>
-                   <SelectContent>
-                     {states.map((s) => <SelectItem key={s.isoCode} value={s.isoCode}>{s.name}</SelectItem>)}
-                   </SelectContent>
-                 </Select>
-              </div>
-              <div className="grid gap-2">
-                 <Label>City</Label>
-                 <Select value={selectedCityName} onValueChange={setSelectedCityName} disabled={!selectedStateISO}>
-                   <SelectTrigger className="bg-white"><SelectValue placeholder={company.city || ""} /></SelectTrigger>
-                   <SelectContent>
-                     {cities.map((city) => <SelectItem key={city.name} value={city.name}>{city.name}</SelectItem>)}
-                   </SelectContent>
-                 </Select>
-              </div>
-              <div className="grid gap-2">
-                 <Label htmlFor="subCity">Sub City / Area</Label>
-                 <Input 
-                   id="subCity" 
-                   name="subCity" 
-                   defaultValue={company.subCity || ""} 
-                   placeholder="eg Downtown"
-                   className="bg-white"
-                 />
-              </div>
-           </div>
-        </div>
-      </div>
+              {/* PUBLIC CONTACT CARD */}
+              <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+                  <div>
+                      <h2 className="text-xl font-bold text-[#000032]">Public Contact</h2>
+                      <p className="text-sm text-gray-500 mt-1">How customers can reach you.</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Email (Left) */}
+                      <div className="space-y-2">
+                          <Label htmlFor="publicEmail" className="text-sm font-bold text-gray-700">Public Email</Label>
+                          <div className="relative">
+                              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                              {/* @ts-ignore */}
+                              <Input id="publicEmail" name="publicEmail" defaultValue={company.contact?.email || ""} className="pl-10 bg-gray-50 border-gray-200" placeholder="support@domain.com" />
+                          </div>
+                      </div>
+                      
+                      {/* Phone (Right) */}
+                      <div className="space-y-2">
+                          <Label htmlFor="phoneNumber" className="text-sm font-bold text-gray-700">Phone Number</Label>
+                          <div className="relative">
+                              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                              {/* @ts-ignore */}
+                              <Input id="phoneNumber" name="phoneNumber" defaultValue={company.contact?.phone || ""} className="pl-10 bg-gray-50 border-gray-200" placeholder="+1 234 567 890" />
+                          </div>
+                      </div>
+                  </div>
 
-      {/* --- CONTACT INFO --- */}
-      <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-6">
-        <div>
-           <h3 className="text-lg font-bold text-[#000032] flex items-center gap-2">
-             <Phone className="h-5 w-5 text-[#0ABED6]" /> Public Contact
-           </h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-           <div className="grid gap-2">
-              <Label htmlFor="publicEmail">Public Email</Label>
-              <div className="relative">
-                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                 {/* @ts-ignore */}
-                 <Input id="publicEmail" name="publicEmail" defaultValue={company.contact?.email || ""} className="pl-10" />
+                  {/* Website (Full Width) */}
+                  <div className="space-y-2">
+                      <Label htmlFor="websiteUrl" className="text-sm font-bold text-gray-700">Website</Label>
+                      <div className="relative">
+                          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input id="websiteUrl" name="websiteUrl" defaultValue={company.websiteUrl || ""} className="pl-10 bg-gray-50 border-gray-200" placeholder="www.yourwebsite.com" />
+                      </div>
+                  </div>
               </div>
-           </div>
-           <div className="grid gap-2">
-              <Label htmlFor="phoneNumber">Phone Number</Label>
-              <div className="relative">
-                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                 {/* @ts-ignore */}
-                 <Input id="phoneNumber" name="phoneNumber" defaultValue={company.contact?.phone || ""} className="pl-10" />
+
+          </div>
+
+          {/* RIGHT COLUMN (2/3) */}
+          <div className="xl:col-span-2 space-y-8">
+              
+              {/* BUSINESS DETAILS CARD */}
+              <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+                  <div>
+                      <h2 className="text-xl font-bold text-[#000032]">Business Details</h2>
+                      <p className="text-sm text-gray-500 mt-1">Categorize your business and describe what you do.</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                          <Label className="text-sm font-bold text-gray-700">Category</Label>
+                          <Select value={selectedCategoryId} onValueChange={(val) => { setSelectedCategoryId(val); setSelectedSubCategoryId(""); }}>
+                              <SelectTrigger className="bg-gray-50 border-gray-200"><SelectValue placeholder="Select Category" /></SelectTrigger>
+                              <SelectContent>
+                                  {categories.map((cat) => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
+                              </SelectContent>
+                          </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                          <Label className="text-sm font-bold text-gray-700">Subcategory</Label>
+                          <Select value={selectedSubCategoryId} onValueChange={setSelectedSubCategoryId} disabled={!selectedCategoryId}>
+                              <SelectTrigger className="bg-gray-50 border-gray-200"><SelectValue placeholder="Select Subcategory" /></SelectTrigger>
+                              <SelectContent>
+                                  {activeSubCategories.map((sub) => <SelectItem key={sub.id} value={sub.id}>{sub.name}</SelectItem>)}
+                              </SelectContent>
+                          </Select>
+                      </div>
+                  </div>
+
+                  <div className="space-y-2">
+                      <Label htmlFor="description" className="text-sm font-bold text-gray-700">About the Business</Label>
+                      <Textarea 
+                          id="description" 
+                          name="description" 
+                          defaultValue={company.briefIntroduction || ""} 
+                          placeholder="Describe your expertise, what makes you unique, and the services you offer..."
+                          className="min-h-[140px] bg-gray-50 border-gray-200 leading-relaxed resize-y custom-scrollbar"
+                      />
+                  </div>
               </div>
-           </div>
-           <div className="grid gap-2 md:col-span-2">
-              <Label htmlFor="websiteUrl">Website</Label>
-              <Input id="websiteUrl" name="websiteUrl" defaultValue={company.websiteUrl || ""} />
-           </div>
-        </div>
-      </div>
 
-      {/* --- SAVE BUTTON --- */}
-      <div className="flex justify-end gap-4 pt-6 pb-10">
-         <Button type="button" variant="secondary" onClick={() => router.back()}>Cancel</Button>
-         <Button type="submit" disabled={isPending} className="bg-[#0ABED6] hover:bg-[#09A8BD] text-white font-bold px-8 shadow-sm">
-           {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-           Save Changes
-         </Button>
-      </div>
+              {/* LOCATION CARD */}
+              <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+                  <div>
+                      <h2 className="text-xl font-bold text-[#000032]">Location</h2>
+                      <p className="text-sm text-gray-500 mt-1">Where is your business headquarters located?</p>
+                  </div>
+                  
+                  <div className="space-y-6">
+                      <div className="space-y-2">
+                          <Label htmlFor="address" className="text-sm font-bold text-gray-700">Address</Label>
+                          <Input id="address" name="address" defaultValue={company.address || ""} placeholder="A - 2, First Floor, Shankar Garden..." className="bg-gray-50 border-gray-200" />
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                              <Label className="text-sm font-bold text-gray-700">Country</Label>
+                              <Select value={selectedCountryISO} onValueChange={(val) => { setSelectedCountryISO(val); setSelectedStateISO(""); setSelectedCityName(""); }}>
+                                  <SelectTrigger className="bg-gray-50 border-gray-200"><SelectValue placeholder="Select Country" /></SelectTrigger>
+                                  <SelectContent>
+                                      {countries.map((c) => <SelectItem key={c.isoCode} value={c.isoCode}>{c.name}</SelectItem>)}
+                                  </SelectContent>
+                              </Select>
+                          </div>
+                          
+                          <div className="space-y-2">
+                              <Label className="text-sm font-bold text-gray-700">State / Province</Label>
+                              <Select value={selectedStateISO } onValueChange={(val) => { setSelectedStateISO(val); setSelectedCityName(""); }} disabled={!selectedCountryISO}>
+                                  <SelectTrigger className="bg-gray-50 border-gray-200"><SelectValue placeholder="Select State" /></SelectTrigger>
+                                  <SelectContent>
+                                      {states.map((s) => <SelectItem key={s.isoCode} value={s.isoCode}>{s.name}</SelectItem>)}
+                                  </SelectContent>
+                              </Select>
+                          </div>
+                          
+                          <div className="space-y-2">
+                              <Label className="text-sm font-bold text-gray-700">City</Label>
+                              <Select value={selectedCityName} onValueChange={setSelectedCityName} disabled={!selectedStateISO}>
+                                  <SelectTrigger className="bg-gray-50 border-gray-200"><SelectValue placeholder="Select City" /></SelectTrigger>
+                                  <SelectContent>
+                                      {cities.map((city) => <SelectItem key={city.name} value={city.name}>{city.name}</SelectItem>)}
+                                  </SelectContent>
+                              </Select>
+                          </div>
+                          
+                          <div className="space-y-2">
+                              <Label htmlFor="subCity" className="text-sm font-bold text-gray-700">Sub City / Area</Label>
+                              <Input 
+                                  id="subCity" 
+                                  name="subCity" 
+                                  defaultValue={company.subCity || ""} 
+                                  placeholder="e.g. Downtown"
+                                  className="bg-gray-50 border-gray-200"
+                              />
+                          </div>
+                      </div>
+                  </div>
+              </div>
 
+          </div>
+      </div>
     </form>
   );
 }

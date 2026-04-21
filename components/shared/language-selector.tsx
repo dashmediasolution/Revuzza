@@ -2,52 +2,87 @@
 
 import { useTranslation } from "@/components/shared/translation-context";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Globe } from "lucide-react";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Globe, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const LANGUAGES = [
-  { code: "en", name: "English" },
-  { code: "es", name: "Español" },
-  { code: "fr", name: "Français" },
-  { code: "de", name: "Deutsch" },
-  { code: "hi", name: "Hindi (हिंदी)" },
+  { code: "en", name: "English", flag: "🇺🇸" },
+  { code: "es", name: "Español", flag: "🇪🇸" },
+  { code: "fr", name: "Français", flag: "🇫🇷" },
+  { code: "de", name: "Deutsch", flag: "🇩🇪" },
+  { code: "hi", name: "Hindi", flag: "🇮🇳" },
 ];
 
-export function LanguageSelector() {
+interface LanguageSelectorProps {
+  variant?: 'header' | 'footer';
+}
+
+export function LanguageSelector({ variant = 'header' }: LanguageSelectorProps) {
   const { targetLang, setTargetLang } = useTranslation();
+  const currentLang = LANGUAGES.find(l => l.code === targetLang) || LANGUAGES[0];
+
+  const isFooter = variant === 'footer';
 
   return (
-    <div className="relative">
-      <Select value={targetLang} onValueChange={setTargetLang}>
-        <SelectTrigger 
-            className="w-[180px] h-11 rounded-full bg-white text-[#0892A5] border-0 shadow-lg hover:bg-gray-50 transition-all font-semibold focus:ring-0 focus:ring-offset-0"
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className={cn(
+            "h-9 px-3 gap-2 font-bold text-[11px] uppercase tracking-widest transition-all rounded-none border",
+            isFooter 
+              ? "bg-white/5 border-white/20 text-white hover:bg-white/10 hover:border-white/40 h-10" 
+              : "bg-transparent border-transparent text-gray-600 hover:bg-gray-100"
+          )}
         >
-          <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-[#0892A5]" />
-            {/* Render value directly to ensure visibility */}
-            <span className="truncate pt-0.5">
-                <SelectValue placeholder="Language" />
-            </span>
-          </div>
-        </SelectTrigger>
-        
-        <SelectContent align="end" className="bg-white border-gray-100 rounded-xl shadow-xl min-w-[180px]">
-          {LANGUAGES.map((lang) => (
-            <SelectItem 
-                key={lang.code} 
-                value={lang.code} 
-                className="cursor-pointer py-2.5 focus:bg-[#0892A5]/10 focus:text-[#0892A5]"
-            >
-              {lang.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+          <Globe className={cn("h-3.5 w-3.5", isFooter ? "text-white" : "text-[#0892A5]")} />
+          
+          {/* ✅ HEADER: Shows 'EN' | FOOTER: Shows 'English' */}
+          <span>
+            {isFooter ? currentLang.name : currentLang.code}
+          </span>
+          
+          <ChevronDown className="h-3 w-3 opacity-50" />
+        </Button>
+      </DropdownMenuTrigger>
+      
+      <DropdownMenuContent 
+        align={isFooter ? "center" : "end"} 
+        className="w-48 p-1 bg-white border border-gray-100 rounded-none shadow-xl z-[100]"
+      >
+        <div className="px-3 py-2 border-b border-gray-50 mb-1">
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+            Select Language
+          </p>
+        </div>
+
+        {LANGUAGES.map((lang) => (
+          <DropdownMenuItem 
+            key={lang.code}
+            onClick={() => setTargetLang(lang.code)}
+            className={cn(
+              "flex items-center justify-between px-3 py-2.5 rounded-none cursor-pointer transition-colors",
+              targetLang === lang.code 
+                ? "bg-[#0892A5]/5 text-[#0892A5]" 
+                : "text-gray-600 hover:bg-gray-50"
+            )}
+          >
+            {/* ✅ DROPDOWN: Always shows Flag + Full Name */}
+            <div className="flex items-center gap-3">
+              <span className="text-base">{lang.flag}</span>
+              <span className="text-xs font-bold uppercase tracking-tight">{lang.name}</span>
+            </div>
+            
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

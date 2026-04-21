@@ -1,12 +1,11 @@
 import Link from 'next/link';
-import Image from 'next/image'; 
+import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { format } from "date-fns";
 import { BlockRating } from './block-rating';
-// ✅ Import the Translator Component
 import { TranslatableText } from "@/components/shared/translatable-text";
+import { CheckCircle2, CalendarDays } from "lucide-react";
 
 type ReviewCardProps = {
   userName: string;
@@ -23,7 +22,6 @@ type ReviewCardProps = {
   className?: string;
   textClassName?: string;
 };
-
 
 export function ReviewCard({
   userName,
@@ -50,67 +48,93 @@ export function ReviewCard({
   return (
     <Link 
       href={`/company/${companySlug}`} 
-      className={cn("block h-full w-full max-w-[350px] mx-auto", className)}
+      className={cn("block h-full w-full max-w-[380px] mx-auto", className)}
     >
-      <Card className="h-full w-full rounded-none  border-gray-200 flex flex-col transition-shadow overflow-hidden">
-        
-        <CardHeader className="pb-3">
-          <div className="flex justify-between items-start">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10 border border-gray-100">
-                <AvatarImage src={userAvatarUrl || ''} alt={userName} />
-                <AvatarFallback>{userInitials}</AvatarFallback>
-              </Avatar>
-              <span className="font-semibold text-gray-800 text-sm line-clamp-1"><TranslatableText text={userName}/></span>
+      <div className="flex flex-col h-full bg-white rounded-none border border-gray-200 hover:border-[#0892A5]/50 hover:shadow-md transition-all duration-300">
+
+        {/* --- HEADER SECTION --- */}
+        <div className="px-5 pt-5 pb-3 border-b border-gray-50">
+            <div className="flex justify-between items-start">
+                
+                {/* Left: Name & Verification */}
+                <div className="flex flex-col">
+                    <h3 className="font-bold text-gray-900 text-sm leading-tight">
+                        <TranslatableText text={userName} />
+                    </h3>
+                    
+                    {/* Verified Badge */}
+                    <div className="flex items-center gap-1 mt-1">
+                         <CheckCircle2 className="w-3 h-3 text-[#0892A5]" />
+                         <span className="text-[10px] font-bold text-[#0892A5] uppercase tracking-wide">
+                            <TranslatableText text="Verified" />
+                         </span>
+                    </div>
+                </div>
+
+                {/* Right: Rating & Date */}
+                <div className="flex flex-col items-end gap-1">
+                    <BlockRating value={rating} size="sm" />
+                    <span className="text-[10px] text-gray-400 font-medium">
+                        <TranslatableText text={displayDate} />
+                    </span>
+                </div>
             </div>
+        </div>
+
+        {/* --- BODY SECTION --- */}
+        <div className="px-5 py-4 flex-1 flex flex-col">
             
-            <span className="text-xs text-gray-400 whitespace-nowrap ml-2">
-              {/* ✅ Translated Date */}
-              <TranslatableText text={displayDate} />
-            </span>
-          </div>
-          
-          <div className="mt-2">
-            <BlockRating value={rating} size="sm" />
-          </div>
-        </CardHeader>
-
-        <CardContent className="pb-4 flex-1 flex flex-col">
-          {/* ✅ Translated Review Text (Maintains line-clamp) */}
-          <div className={cn("text-gray-700 text-sm mb-4 flex-1", textClassName || "line-clamp-3")}>
-             <TranslatableText text={reviewText} />
-          </div>
-          
-          <div>
-             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-500 border border-gray-200">
-                <TranslatableText text="Date of Experience" />: <TranslatableText text={displayExpDate} />
-             </span>
-          </div>
-        </CardContent>
-
-        <CardFooter className="pt-4 border-t bg-gray-50/50">
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div className="h-10 w-10 rounded-md flex items-center justify-center shrink-0 overflow-hidden relative">
-               {companyLogoUrl ? (
-                 <Image 
-                   src={companyLogoUrl} 
-                   alt={companyName} 
-                   fill
-                   className="p-0.5 object-contain" 
-                 />
-               ) : (
-                 <span className="text-xs font-bold">{companyName?.[0]}</span>
-               )}
+            {/* Review Text (Uniform Min-Height applied here) */}
+            <div className={cn("text-gray-600 text-sm leading-relaxed min-h-[70px]", textClassName || "line-clamp-3")}>
+                <TranslatableText text={reviewText} />
             </div>
-            <div className="min-w-0">
-              <div className="font-semibold text-gray-800 text-sm truncate">
-                  <TranslatableText text={companyName} />
-              </div>
-              <div className="text-xs text-muted-foreground truncate">{companyDomain}</div>
+
+            {/* Date of Experience */}
+            <div className="mt-auto pt-4 flex items-center gap-1.5 opacity-80">
+                 <CalendarDays className="w-3 h-3 text-gray-400" />
+                 <span className="text-[10px] text-gray-500 font-medium">
+                    <TranslatableText text="Experience date" />: <span className="text-gray-700"><TranslatableText text={displayExpDate} /></span>
+                 </span>
             </div>
-          </div>
-        </CardFooter>
-      </Card>
+        </div>
+
+        {/* --- FOOTER SECTION --- */}
+        <div className="bg-gray-50 border-t border-gray-200 px-5 py-3 flex items-center justify-between">
+             
+             {/* Company Info */}
+             <div className="flex items-center gap-3 overflow-hidden">
+                <div className="h-10 w-12 rounded-none bg-white flex items-center justify-center shrink-0">
+                   {companyLogoUrl ? (
+                      <div className="relative w-full h-full p-1">
+                         <Image src={companyLogoUrl} alt={companyName} fill className="object-contain" />
+                      </div>
+                   ) : (
+                      <span className="text-xs font-bold text-gray-400">{companyName?.[0]}</span>
+                   )}
+                </div>
+                <div className="flex flex-col min-w-0">
+                    <span className="font-bold text-gray-900 text-xs truncate">
+                        <TranslatableText text={companyName} />
+                    </span>
+                    <span className="text-[9px] text-gray-500 truncate">
+                        {companyDomain}
+                    </span>
+                </div>
+             </div>
+
+             {/* Posted By Avatar */}
+             <div className="flex items-center gap-2 pl-4 border-l border-gray-200 shrink-0">
+                 <Avatar className="h-8 w-8">
+                    <AvatarImage src={userAvatarUrl || ''} />
+                    <AvatarFallback className="text-[9px] bg-white text-gray-600 font-bold">
+                        {userInitials}
+                    </AvatarFallback>
+                 </Avatar>
+             </div>
+
+        </div>
+
+      </div>
     </Link>
   );
 }

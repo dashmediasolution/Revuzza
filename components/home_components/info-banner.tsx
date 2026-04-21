@@ -8,7 +8,7 @@ export function InfoBanner() {
   return (
     <section>
       <div className="container mx-auto max-w-7xl px-4">
-        <div className="bg-[#0ABED6] rounded-2xl shadow-xl overflow-hidden md:grid md:grid-cols-2 lg:grid-cols-3">
+        <div className="bg-[#0ABED6] rounded-none overflow-hidden md:grid md:grid-cols-2 lg:grid-cols-3">
           
           {/* Left Column: Main Message */}
           <div className="p-8 md:p-10  col-span-1 md:col-span-1 lg:col-span-2 flex flex-col justify-center">

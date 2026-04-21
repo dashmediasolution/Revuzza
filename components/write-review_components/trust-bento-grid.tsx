@@ -18,16 +18,16 @@ export function TrustBentoGrid() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[minmax(180px,auto)]">
           
           {/* Card 1: Verified Identity (Large) - COLOR #0892A5 */}
-          <div className="group md:col-span-2 bg-[#0892A5] rounded-3xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden">
+          <div className="group md:col-span-2 bg-[#0892A5] rounded-none p-8 transition-all duration-300 relative overflow-hidden">
             {/* Background Icon Decoration */}
-            <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:opacity-20 transition-opacity">
-              <ShieldCheck className="w-64 h-64 text-white" />
+            <div className="absolute -top-10 right-0 p-12 opacity-10 group-hover:opacity-20 transition-opacity">
+              <ShieldCheck className="w-56 h-56 text-white" />
             </div>
             
             <div className="relative z-10 h-full flex flex-col justify-between">
-              <div className="bg-white/20 w-14 h-14 rounded-xl flex items-center justify-center mb-6 backdrop-blur-sm">
+              {/*<div className="bg-white/20 w-14 h-14 rounded-xl flex items-center justify-center mb-6 backdrop-blur-sm">
                 <ShieldCheck className="w-7 h-7 text-white" />
-              </div>
+              </div>*/}
               <div>
                 <h3 className="text-2xl font-bold text-white mb-3">
                   <TranslatableText text="Verified Experiences" />
@@ -40,12 +40,12 @@ export function TrustBentoGrid() {
           </div>
 
           {/* Card 2: AI Detection (Small) - COLOR #0ABED6 */}
-          <div className="bg-[#0ABED6] rounded-3xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between relative overflow-hidden">
+          <div className="bg-[#0ABED6] rounded-none p-8  transition-all duration-300 flex flex-col justify-between relative overflow-hidden">
              <div className="absolute -right-6 -top-6 bg-white/10 w-32 h-32 rounded-full blur-2xl pointer-events-none" />
             
-            <div className="bg-white/20 w-14 h-14 rounded-xl flex items-center justify-center mb-6 backdrop-blur-sm">
+            {/*<div className="bg-white/20 w-14 h-14 rounded-xl flex items-center justify-center mb-6 backdrop-blur-sm">
               <ScanFace className="w-7 h-7 text-white" />
-            </div>
+            </div>*/}
             <div>
               <h3 className="text-xl font-bold text-white mb-2">
                 <TranslatableText text="24/7 Fraud Sweep" />
@@ -57,12 +57,12 @@ export function TrustBentoGrid() {
           </div>
 
           {/* Card 3: No Bias (Small) - COLOR #0ABED6 */}
-          <div className="bg-[#0ABED6] rounded-3xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between relative overflow-hidden">
+          <div className="bg-[#0ABED6] rounded-none p-8 transition-all duration-300 flex flex-col justify-between relative overflow-hidden">
              <div className="absolute -left-6 -bottom-6 bg-white/10 w-32 h-32 rounded-full blur-2xl pointer-events-none" />
 
-            <div className="bg-white/20 w-14 h-14 rounded-xl flex items-center justify-center mb-6 backdrop-blur-sm">
+            {/*<div className="bg-white/20 w-14 h-14 rounded-xl flex items-center justify-center mb-6 backdrop-blur-sm">
               <Scale className="w-7 h-7 text-white" />
-            </div>
+            </div>*/}
             <div>
               <h3 className="text-xl font-bold text-white mb-2">
                 <TranslatableText text="Zero Bias" />
@@ -74,16 +74,16 @@ export function TrustBentoGrid() {
           </div>
 
           {/* Card 4: Community Power (Large) - COLOR #0892A5 */}
-          <div className="md:col-span-2 bg-[#0892A5] rounded-3xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden">
+          <div className="md:col-span-2 bg-[#0892A5] rounded-none p-8 transition-all duration-300 relative overflow-hidden">
              {/* Background Icon Decoration */}
-             <div className="absolute -bottom-10 -right-10 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Users className="w-64 h-64 text-white" />
+             <div className="absolute -bottom-10 right-0 opacity-10 group-hover:opacity-20 transition-opacity">
+              <Users className="w-56 h-56 text-white" />
              </div>
 
             <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-8 h-full">
-              <div className="bg-white/20 w-14 h-14 rounded-xl flex items-center justify-center shrink-0 backdrop-blur-sm">
+              {/*<div className="bg-white/20 w-14 h-14 rounded-xl flex items-center justify-center shrink-0 backdrop-blur-sm">
                 <Users className="w-7 h-7 text-white" />
-              </div>
+              </div>*/}
               <div>
                 <h3 className="text-2xl font-bold text-white mb-3">
                   <TranslatableText text="Community Driven" />

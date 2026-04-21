@@ -1,57 +1,54 @@
 import { Clock, BadgeCheck, Zap, Heart, Trophy, Star } from "lucide-react";
 
-// 1. Existing Badge Config
-export const BADGE_CONFIG: Record<string, { label: string; description: string; icon: any; color: string; bg: string }> = {
+export const BADGE_CONFIG: Record<string, { label: string; description: string; icon: any; color: string; border: string }> = {
   FAST_REPLY: {
-    label: "Fast Responder",
-    description: "Typically replies to reviews within 24 hours.",
+    label: "Fast Response",
+    description: "Replies within 24h.",
     icon: Clock,
-    color: "text-blue-600",
-    bg: "bg-blue-50"
+    color: "text-gray-500",
+    border: "border-gray-200"
   },
   HIGH_RESPONSE: {
     label: "Active Resolver",
-    description: "Replies to 90% of negative reviews.",
+    description: "High resolution rate.",
     icon: Zap,
-    color: "text-yellow-600",
-    bg: "bg-yellow-50"
+    color: "text-gray-500",
+    border: "border-gray-200"
   },
   VERIFIED_DETAILS: {
-    label: "Fully Verified",
-    description: "Phone, Email, and Address verified by staff.",
+    label: "Identity Verified",
+    description: "Business details confirmed.",
     icon: BadgeCheck,
-    color: "text-emerald-600",
-    bg: "bg-emerald-50"
+    color: "text-[#0892A5]", 
+    border: "border-[#0892A5]/40"
   },
   COMMUNITY_FAV: {
-    label: "Community Favorite",
-    description: "Maintains a 4.5+ rating for 3 months.",
+    label: "Top Rated",
+    description: "Consistent 4.5+ rating.",
     icon: Heart,
-    color: "text-pink-600",
-    bg: "bg-pink-50"
+    color: "text-gray-500",
+    border: "border-gray-200"
   },
   CATEGORY_LEADER: {
-    label: "Category Leader",
-    description: "Ranked in the Top 3 for this category.",
+    label: "Market Leader",
+    description: "Top performer in category.",
     icon: Trophy,
-    color: "text-purple-600",
-    bg: "bg-purple-50"
+    color: "text-gray-500",
+    border: "border-gray-200"
   },
   MOST_RELEVANT: {
     label: "Most Relevant",
-    description: "Highlighted as a top choice for this category.",
+    description: "Highest relevance score.",
     icon: Star,
     color: "text-white", 
-    bg: "bg-[#0ABED6]" 
+    border: "border-gray-950" 
   }
 };
 
-// 2. ✅ UPDATED: Plan Rules (Centralized)
-// Added CUSTOM: [] so custom plans have no forced/locked badges
 export const PLAN_AUTO_BADGES: Record<string, string[]> = {
   FREE: [],
   GROWTH: ['COMMUNITY_FAV', 'VERIFIED_DETAILS'],
   SCALE: ['COMMUNITY_FAV', 'VERIFIED_DETAILS', 'CATEGORY_LEADER'],
   PRO: ['COMMUNITY_FAV', 'VERIFIED_DETAILS'], 
-  CUSTOM: [] // ✅ Custom plan = No forced badges, full manual control
+  CUSTOM: [] 
 };

@@ -1,6 +1,6 @@
-import { Progress } from "@/components/ui/progress";
 import { Lock, Zap, Crown } from "lucide-react";
 import Link from "next/link";
+import { format } from "date-fns";
 
 interface EmailUsageTrackerProps {
   plan: string;
@@ -14,6 +14,9 @@ export function EmailUsageTracker({ plan, usage, limit }: EmailUsageTrackerProps
 
   const percentage = Math.min((usage / limit) * 100, 100);
   const remaining = Math.max(limit - usage, 0);
+  
+  // ✅ Get the current month (e.g., "February")
+  const currentMonthName = format(new Date(), "MMMM");
 
   // Helper for color based on plan
   const getProgressColor = () => {
@@ -26,7 +29,8 @@ export function EmailUsageTracker({ plan, usage, limit }: EmailUsageTrackerProps
     <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm mb-6">
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-           Monthly Email Allowance
+           {/* ✅ Display the month in the title */}
+           {currentMonthName} Email Allowance
         </h3>
         <span className="text-xs font-bold text-gray-500">
           {usage} / {limit} emails sent
@@ -46,11 +50,11 @@ export function EmailUsageTracker({ plan, usage, limit }: EmailUsageTrackerProps
           {remaining === 0 ? (
             <span className="text-red-500 font-bold">Monthly Limit Reached</span>
           ) : (
-            <span>{remaining} emails remaining this month</span>
+            /* ✅ Display the month in the remaining text */
+            <span>{remaining} emails remaining in {currentMonthName}</span>
           )}
         </p>
         
-        {/* ✅ UPDATED: Fixed Link URL */}
         {plan !== 'SCALE' && plan !== 'CUSTOM' && (
             <Link href="/business/billing" className="text-xs text-gray-900 font-bold hover:underline flex items-center gap-1">
                <Zap className="h-3 w-3 text-yellow-500" /> Upgrade Plan

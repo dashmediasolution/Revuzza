@@ -35,8 +35,8 @@ export async function CategoriesCarousel() {
             </h2>
             
             <div className="flex items-center gap-2">
-              <CarouselPrevious className="static translate-y-0 h-9 w-9 border-border hover:bg-[#0ABED6]/80 hover:text-accent-foreground" />
-              <CarouselNext className="static translate-y-0 h-9 w-9 border-border hover:bg-[#0ABED6]/80 hover:text-accent-foreground" />
+              <CarouselPrevious className="static translate-y-0 h-9 w-9 border-border hover:bg-gray-100 hover:text-accent-foreground" />
+              <CarouselNext className="static translate-y-0 h-9 w-9 border-border hover:bg-gray-100 hover:text-accent-foreground" />
               
               {/* "See more" button */}
               <Link 
@@ -58,7 +58,7 @@ export async function CategoriesCarousel() {
                 <CarouselItem key={category.id} className="pl-4 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/6">
                   <Link
                     href={`/categories/${category.slug}`} 
-                    className="group flex flex-col items-center justify-center p-6 rounded-xl border border-transparent hover:bg-gray-50 hover:border-gray-100 transition-all duration-200 cursor-pointer h-full"
+                    className="group flex flex-col items-center justify-center p-6 rounded-none border border-transparent hover:bg-gray-50 hover:border-gray-100 transition-all duration-200 cursor-pointer h-full"
                   >
                     <Icon
                       className="w-8 h-8 mb-4 text-gray-600 group-hover:text-primary transition-colors"

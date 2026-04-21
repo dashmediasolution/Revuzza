@@ -12,15 +12,17 @@ export default async function ShowcasePage() {
   const company = await prisma.company.findUnique({
     where: { id: session.user.companyId },
     include: {
-        showcaseItems: true // ✅ Fetch the items
+        showcaseItems: true 
     }
   });
 
   if (!company) return <div>Company not found</div>;
 
   return (
-    <div className="mx-0 lg:mx-20 max-w-6xl py-6">
-       <ShowcaseManager company={company} />
+    <div className="min-h-screen p-6 lg:p-8 pb-20">
+       <div className="max-w-[1440px] mx-auto">
+          <ShowcaseManager company={company} />
+       </div>
     </div>
   );
 }

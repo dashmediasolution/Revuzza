@@ -8,7 +8,7 @@ export function BusinessCTA() {
   return (
     <section > 
       <div className="container mx-auto max-w-7xl px-4">
-        <div className="relative bg-[#0ABED6] rounded-lg p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden">
+        <div className="relative bg-[#0ABED6] rounded-none p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden">
           
           {/* Background pattern */}
           <div className="absolute inset-0 ">

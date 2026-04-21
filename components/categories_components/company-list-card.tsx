@@ -79,10 +79,9 @@ export function CompanyListCard({
 
         {badgeConfig && (
           <Badge 
-             className={`mt-2 text-[10px] sm:text-xs font-bold border-none shadow-sm flex items-center gap-1 text-center justify-center min-w-[100px] 
-             ${badgeConfig.bg} ${badgeConfig.color} hover:${badgeConfig.bg}`}
+             className={`mt-2 text-[10px] sm:text-xs font-bold border-none flex items-center gap-1 text-center justify-center min-w-[100px] 
+             ${badgeConfig.color} bg-[#0892A5]`}
           >
-            <badgeConfig.icon className="h-3 w-3" />
             <TranslatableText text={badgeConfig.label} />
           </Badge>
         )}

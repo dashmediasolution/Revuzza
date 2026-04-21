@@ -99,7 +99,7 @@ export function CompanyPhotoCarousel({ images }: CompanyPhotoCarouselProps) {
               key={index}
               // Clicking an individual image opens the carousel at that index
               onClick={() => openCarousel(index)}
-              className="relative h-52 w-80 shrink-0 cursor-pointer rounded-none overflow-hidden snap-start border border-gray-200 group"
+              className="relative h-52 w-80 shrink-0 cursor-pointer rounded-none overflow-hidden snap-start border-none group"
             >
               <Image
                 src={url}

@@ -11,10 +11,10 @@ import { getTopRatedCompanies, getRecentReviews } from '@/lib/data';
 export default async function HomePage() {
 
   const topCompanies = await getTopRatedCompanies();
-  // Fetch 8 reviews for the bottom carousel
-  const recentReviews = await getRecentReviews(8);
-  // Use the first 3 for the Hero section
-  const heroReviews = recentReviews.slice(0, 3);
+  // Fetch 10 reviews for the bottom carousel
+  const recentReviews = await getRecentReviews(10);
+  // Use the first 5 for the Hero section
+  const heroReviews = recentReviews.slice(0, 5);
 
   return (
     <div className="w-full">

@@ -32,8 +32,8 @@ export function RecentReviews({ reviews }: RecentReviewsProps) {
                <TranslatableText text="Recent reviews" />
             </h2>
             <div className="block lg:hidden flex items-center gap-2">
-              <CarouselPrevious className="static translate-y-0 h-10 w-10 border-border hover:bg-[#0ABED6] hover:text-accent-foreground" />
-              <CarouselNext className="static translate-y-0 h-10 w-10 border-border hover:bg-[#0ABED6] hover:text-accent-foreground" />
+              <CarouselPrevious className="static translate-y-0 h-10 w-10 border-border hover:bg-gray-100 hover:text-accent-foreground" />
+              <CarouselNext className="static translate-y-0 h-10 w-10 border-border hover:bg-gray-100 hover:text-accent-foreground" />
             </div>
           </div>
 
