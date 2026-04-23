@@ -4,14 +4,14 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
-generator client {
-  provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
-}
-
 datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider        = "prisma-client-js"
+
 }
 
 enum Role {
@@ -311,7 +311,7 @@ model HelpfulVote {
 model Report {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   userId    String   @db.ObjectId
-  reviewId  String?   @db.ObjectId
+  reviewId  String?  @db.ObjectId
   reason    String  
   status    String   @default("PENDING") 
   resolution String?

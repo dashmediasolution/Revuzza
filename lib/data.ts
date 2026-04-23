@@ -1,5 +1,5 @@
 // lib/data.ts
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 function getOptimizedUrl(url: string | null, width: number = 800) {
   if (!url) return null;
@@ -54,8 +54,6 @@ type FilterOptions = {
   sort?: string;
   q?: string;
 };
-
-const prisma = new PrismaClient();
 
 function sortCompanies(companies: any[], sortKey: string) {
   return [...companies].sort((a, b) => {

@@ -28,18 +28,18 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         // 1. On sign in, user object is available. Copy ID to token.
-        token.id = user.id as string; 
-        token.role = (user.role as string) || 'USER';
+        token.id = user.id;
+        token.role = user.role || 'USER';
         token.companyId = user.companyId; 
       }
       return token;
     },
     async session({ session, token }) {
-      if (token.id && session.user) {
+      if (session.user) {
         // 2. On every request, copy ID from token to session.
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
-        session.user.companyId = token.companyId as string | null;
+        session.user.id = token.id;
+        session.user.role = token.role;
+        session.user.companyId = token.companyId;
       }
       return session;
     },
