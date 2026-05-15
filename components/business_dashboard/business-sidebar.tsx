@@ -42,9 +42,17 @@ const BUSINESS_LINKS = [
   { name: "Edit Profile", href: "/business/dashboard/settings", icon: Settings },
 ];
 
-export function BusinessSidebar() {
+interface BusinessSidebarProps {
+  onLinkClick?: () => void;
+  forceExpanded?: boolean;
+}
+
+export function BusinessSidebar({ onLinkClick, forceExpanded }: BusinessSidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const pathname = usePathname();
+
+  // Use forceExpanded if provided (for mobile overlay), otherwise use hover behavior
+  const shouldExpand = forceExpanded !== undefined ? forceExpanded : !isCollapsed;
 
   return (
     <motion.nav
@@ -53,11 +61,11 @@ export function BusinessSidebar() {
         "fixed inset-y-4 left-4 z-50 flex flex-col rounded-3xl bg-[#000032] border border-white/10 shadow-2xl overflow-hidden",
       )}
       initial={isCollapsed ? "closed" : "open"}
-      animate={isCollapsed ? "closed" : "open"}
+      animate={shouldExpand ? "open" : "closed"}
       variants={sidebarVariants}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      onMouseEnter={() => setIsCollapsed(false)}
-      onMouseLeave={() => setIsCollapsed(true)}
+      onMouseEnter={() => !forceExpanded && setIsCollapsed(false)}
+      onMouseLeave={() => !forceExpanded && setIsCollapsed(true)}
     >
         
       {/* --- TOP: Premium App Brand Header --- */}
@@ -85,6 +93,7 @@ export function BusinessSidebar() {
             <Link
               key={link.name}
               href={link.href}
+              onClick={onLinkClick}
               className={cn(
                 "relative flex h-12 w-full items-center rounded-2xl px-3 transition-all duration-200 group",
                 isActive 

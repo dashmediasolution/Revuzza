@@ -1,7 +1,9 @@
 import nodemailer from "nodemailer";
 
 const domain = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+import { Resend } from 'resend';
 
+const resend = new Resend(process.env.RESEND_API_KEY);
 // Configure the email transporter using your Gmail credentials
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -119,9 +121,7 @@ export const sendDomainVerificationEmail = async (email: string, token: string) 
 };
 
 
-import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ✅ SEND REVIEW INVITE VIA RESEND
 export const sendReviewInvite = async (
@@ -235,4 +235,68 @@ export const sendProfessionalCampaign = async (
     subject: subject,
     html: emailHtml
   });
+};
+
+
+export const sendForgotPasswordEmail = async (
+  email: string,
+  token: string,
+  name?: string
+) => {
+  const resetLink = `${domain}/reset-password?token=${token}`;
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"Help Platform" <${process.env.SMTP_EMAIL}>`,
+      to: email,
+      subject: "🔐 Reset Your Password",
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          
+          <h1 style="color: #000032;">Reset Your Password</h1>
+          
+          <p>Hello ${name || "User"},</p>
+          
+          <p>We received a request to reset your password. Click the button below to set a new password.</p>
+
+          <div style="margin: 30px 0;">
+            <a href="${resetLink}" 
+              style="
+                background-color: #0ABED6; 
+                color: white; 
+                padding: 12px 24px; 
+                text-decoration: none; 
+                border-radius: 5px; 
+                font-weight: bold;
+                display: inline-block;
+              ">
+              Reset Password
+            </a>
+          </div>
+
+          <p style="font-size: 14px; color: #666;">
+            Or copy and paste this link into your browser:
+            <br/>
+            <a href="${resetLink}">${resetLink}</a>
+          </p>
+
+          <p style="margin-top: 20px;">
+            If you did not request this, you can safely ignore this email.
+          </p>
+
+          <p style="font-size: 12px; color: #999; margin-top: 30px;">
+            This link will expire in 15 minutes for security reasons.
+          </p>
+
+        </div>
+      `,
+    });
+
+    console.log("✅ Forgot Password Email Sent:", info.messageId);
+    return { success: true };
+
+  } catch (error) {
+    console.error("❌ Nodemailer Error (Forgot Password):", error);
+    return { success: false, error };
+  }
 };

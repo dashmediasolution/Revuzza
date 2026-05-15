@@ -123,9 +123,9 @@ export function Header({ user, variant = 'user' }: HeaderProps) {
                   onOpenChange={(isOpen) => setActiveDropdown(isOpen ? 'account' : null)}
                 />
                 {/* Extreme Right Placement */}
-                <div className="pl-4 border-l border-gray-100">
+                {/* <div className="pl-4 border-l border-gray-100">
                   <LanguageSelector />
-                </div>
+                </div> */}
               </div>
             ) : (
               <div className="flex items-center gap-3">
@@ -142,9 +142,9 @@ export function Header({ user, variant = 'user' }: HeaderProps) {
                   </Link>
                 </div>
                 {/* Extreme Right Placement for Guest */}
-                <div className="pl-4 border-l border-gray-100">
+                {/* <div className="pl-4 border-l border-gray-100">
                   <LanguageSelector variant="header" />
-                </div>
+                </div> */}
               </div>
             )}
           </div>
@@ -185,12 +185,12 @@ export function Header({ user, variant = 'user' }: HeaderProps) {
           )}
 
           {/* Language Selector (Mobile - Top) */}
-          <div className="mb-6">
+          {/* <div className="mb-6">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Language</p>
             <div className="flex justify-start">
               <LanguageSelector />
             </div>
-          </div>
+          </div> */}
 
           <div className="flex flex-col gap-4">
             {links.map((link) => (

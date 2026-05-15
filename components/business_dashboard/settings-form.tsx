@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { updateCompanyProfile } from "@/lib/actions";
+import { uploadShowcaseImage } from "@/lib/showcase-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,6 +47,41 @@ export function SettingsForm({ company, categories }: SettingsFormProps) {
   // Image State
   const [logoPreview, setLogoPreview] = useState<string | null>(company.logoImage);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const [galleryImageUrls, setGalleryImageUrls] = useState<string[]>(company.otherImages || []);
+  const [galleryUploading, setGalleryUploading] = useState(false);
+
+  const openGalleryInput = () => {
+    galleryInputRef.current?.click();
+  };
+
+  const handleGalleryFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    setGalleryUploading(true);
+
+    for (const file of files) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Each image must be under 5MB.");
+        continue;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const result = await uploadShowcaseImage(formData);
+      if (result.success && result.url) {
+        setGalleryImageUrls((prev) => [...prev, result.url]);
+        toast.success("Image uploaded");
+      } else {
+        toast.error(result.error || "Upload failed.");
+      }
+    }
+
+    if (galleryInputRef.current) galleryInputRef.current.value = "";
+    setGalleryUploading(false);
+  };
 
   // Category State
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(company.categoryId || "");
@@ -202,6 +238,55 @@ export function SettingsForm({ company, categories }: SettingsFormProps) {
                           <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wider">Recommended: 400x400px (JPG, PNG)</p>
                       </div>
                   </div>
+              </div>
+
+              {/* COMPANY IMAGES CARD */}
+              <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+                  <div>
+                      <h2 className="text-xl font-bold text-[#000032]">Company Images</h2>
+                      <p className="text-sm text-gray-500 mt-1">Upload multiple business photos for your public listing. Click the button again to select more images.</p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <Button
+                          type="button"
+                          variant="outline"
+                          className="font-bold border-gray-200 text-gray-700 rounded-lg h-11 px-5"
+                          onClick={openGalleryInput}
+                          disabled={galleryUploading}
+                      >
+                          <UploadCloud className="h-4 w-4 mr-2" />
+                          {galleryUploading ? 'Uploading...' : 'Select Images'}
+                      </Button>
+                      <p className="text-sm text-gray-500">Recommended: JPG/PNG, max 5MB per image.</p>
+                  </div>
+
+                  <input
+                      ref={galleryInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleGalleryFiles}
+                      className="hidden"
+                  />
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {galleryImageUrls.length > 0 ? (
+                          galleryImageUrls.map((src, index) => (
+                              <div key={`${src}-${index}`} className="relative h-28 rounded-3xl overflow-hidden border border-gray-200 bg-gray-50">
+                                  <img src={src} alt={`Company Image ${index + 1}`} className="h-full w-full object-cover" />
+                              </div>
+                          ))
+                      ) : (
+                          <div className="col-span-2 sm:col-span-3 rounded-3xl border-dashed border-gray-300 bg-gray-50 p-8 text-center text-sm text-gray-500">
+                              No images uploaded yet. Click "Select Images" to add photos.
+                          </div>
+                      )}
+                  </div>
+
+                  {galleryImageUrls.map((url, index) => (
+                      <input key={`${url}-hidden-${index}`} type="hidden" name="otherImages" value={url} />
+                  ))}
               </div>
 
               {/* PUBLIC CONTACT CARD */}

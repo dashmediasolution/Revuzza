@@ -1,4 +1,5 @@
 "use client";
+import { useSession } from "next-auth/react";
 
 import { useState, Fragment } from "react";
 import Link from "next/link";
@@ -12,12 +13,12 @@ import {
 } from "@/components/ui/accordion";
 // ✅ Import Translation Component
 import { TranslatableText } from "@/components/shared/translatable-text";
-
+import { redirect } from "next/navigation";
 // --- CONFIGURATION ---
 
 const PLANS = [
   {
-    name: "Free",
+    name: "FREE",
     slug: "free",
     price: { monthly: 0, yearly: 0 },
     description: "Essential tools to claim your profile and start collecting reviews.",
@@ -31,7 +32,7 @@ const PLANS = [
     ],
   },
   {
-    name: "Growth",
+    name: "GROWTH",
     slug: "growth",
     price: { monthly: 20, yearly: 240 },
     description: "Stand out from the crowd with verified badges and rich content.",
@@ -49,7 +50,7 @@ const PLANS = [
     ],
   },
   {
-    name: "Scale",
+    name: "SCALE",
     slug: "scale",
     price: { monthly: 40, yearly: 480 },
     description: "Maximize visibility with category sponsorship and priority support.",
@@ -63,7 +64,7 @@ const PLANS = [
     ],
   },
   {
-    name: "Custom",
+    name: "CUSTOM",
     slug: "custom",
     price: { monthly: "Custom", yearly: "Custom" },
     description: "Enterprise-grade solutions for multi-location brands.",
@@ -167,14 +168,118 @@ function FAQSection() {
   );
 }
 
+const loadRazorpay = () => {
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
+const payementHandler = async (plan: any, userSession: any) => {
+  console.log("1. Function called", plan.name);
+  
+if (!userSession || !userSession.user.id || userSession.user.role !== "BUSINESS") {
+  console.log("2. Redirecting - not BUSINESS user");
+redirect('/business/login');
+}
+else {
+  console.log("3. User validated, loading Razorpay");
+  try {
+    const isLoaded = await loadRazorpay();
+    console.log("4. Razorpay loaded:", isLoaded);
+    if (!isLoaded) {
+      alert("Razorpay SDK failed to load");
+      return;
+    }
+
+    // 1️⃣ Create order
+    console.log("5. Creating order...");
+    const res = await fetch("/api/create-order", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ planType: plan }),
+    });
+
+    const data = await res.json();
+    console.log("6. Order created:", data);
+    if (!data.id) throw new Error("Order creation failed");
+
+    // 2️⃣ Razorpay options
+    console.log("7. Building Razorpay options...");
+    const options = {
+      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      amount: data.amount,
+      currency: "INR",
+      name: plan.name,
+      description: plan.description,
+      order_id: data.id,
+
+      handler: async function (response: any) {
+        try {
+          const verifyRes = await fetch("/api/razorpay/verify", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              ...response,
+              planType: plan.name,
+              amount: data.amount,
+            }),
+          });
+
+          const verifyData = await verifyRes.json();
+          console.log("Verification response:", verifyData);
+          if (!verifyData.success) {
+            alert(verifyData?.error || "❌ Verification failed");
+            return;
+          }
+
+          alert("✅ Payment successful!");
+        } catch (err) {
+          console.error("Verification error:", err);
+          alert("Verification error");
+        }
+      },
+
+      prefill: {
+        name: userSession?.user?.name,
+        email: userSession?.user?.email,
+      },
+
+      theme: {
+        color: "#0ABED6",
+      },
+    };
+
+    const rzp = new (window as any).Razorpay(options);
+    console.log("8. Razorpay instance created:", rzp);
+    console.log("Razorpay options:", options);
+    rzp.on("payment.failed", function () {
+      alert("❌ Payment failed");
+    });
+
+    rzp.open();
+  } catch (err) {
+    alert("Something went wrong");
+  }
+}
+};
+
 // --- MAIN PAGE ---
 
 export default function PricingPage() {
   const [isYearly, setIsYearly] = useState(false);
+  const { data: session } = useSession();
 
   return (
     <div className="bg-gray-50 min-h-screen pb-24 font-sans text-gray-900">
-      
+
       {/* --- HERO HEADER --- */}
       <div className="relative bg-[#0892A5] pt-24 pb-20 px-4 border-b border-gray-100">
         <div className="max-w-4xl mx-auto text-center space-y-6">
@@ -188,27 +293,27 @@ export default function PricingPage() {
           {/* TOGGLE SWITCH */}
           <div className="pt-8 flex justify-center">
             <div className="inline-flex items-center p-1 bg-gray-100 rounded-full border border-gray-200">
-                <button
+              <button
                 onClick={() => setIsYearly(false)}
                 className={cn(
-                    "px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-200",
-                    !isYearly ? "bg-white text-[#0892A5] shadow-sm" : "text-gray-500 hover:text-gray-800"
+                  "px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-200",
+                  !isYearly ? "bg-white text-[#0892A5] shadow-sm" : "text-gray-500 hover:text-gray-800"
                 )}
-                >
+              >
                 <TranslatableText text="Monthly" />
-                </button>
-                <button
+              </button>
+              <button
                 onClick={() => setIsYearly(true)}
                 className={cn(
-                    "px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 flex items-center gap-2",
-                    isYearly ? "bg-white text-[#0892A5] shadow-sm" : "text-gray-500 hover:text-gray-800"
+                  "px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 flex items-center gap-2",
+                  isYearly ? "bg-white text-[#0892A5] shadow-sm" : "text-gray-500 hover:text-gray-800"
                 )}
-                >
+              >
                 <TranslatableText text="Yearly" />
                 <span className="bg-[#0ABED6]/10 text-[#0ABED6] text-[10px] uppercase font-bold px-1.5 py-0.5 rounded">
-                    -20%
+                  -20%
                 </span>
-                </button>
+              </button>
             </div>
           </div>
         </div>
@@ -223,40 +328,40 @@ export default function PricingPage() {
               className={cn(
                 "group relative bg-white p-8 flex flex-col border transition-all duration-200",
                 "rounded-2xl hover:shadow-xl hover:translate-y-[-4px]",
-                plan.popular 
-                  ? "border-[#0ABED6] shadow-lg ring-1 ring-[#0ABED6]/20" 
+                plan.popular
+                  ? "border-[#0ABED6] shadow-lg ring-1 ring-[#0ABED6]/20"
                   : "border-gray-200 shadow-sm hover:border-[#0ABED6]/50"
               )}
             >
               {/* Popular Badge */}
               {plan.popular && (
                 <div className="absolute top-4 right-4">
-                    <span className="bg-[#0ABED6] text-white text-[10px] font-bold uppercase tracking-wider py-1 px-3 rounded-full">
-                        <TranslatableText text="Popular" />
-                    </span>
+                  <span className="bg-[#0ABED6] text-white text-[10px] font-bold uppercase tracking-wider py-1 px-3 rounded-full">
+                    <TranslatableText text="Popular" />
+                  </span>
                 </div>
               )}
 
               {/* Header */}
               <div className="mb-8">
                 <h3 className="text-2xl font-bold text-gray-900 tracking-tight">
-                    <TranslatableText text={plan.name} />
+                  <TranslatableText text={plan.name} />
                 </h3>
                 <div className="mt-4 flex items-baseline gap-1">
-                    {typeof plan.price.monthly === "number" ? (
-                        <>
-                            <span className="text-4xl font-bold text-gray-900 tracking-tight">
-                                ${isYearly ? plan.price.yearly : plan.price.monthly}
-                            </span>
-                            <span className="text-gray-500 font-medium text-sm">
-                                /{isYearly ? <TranslatableText text="yr" /> : <TranslatableText text="mo" />}
-                            </span>
-                        </>
-                    ) : (
-                        <span className="text-3xl font-bold text-gray-900 tracking-tight">
-                            <TranslatableText text="Custom" />
-                        </span>
-                    )}
+                  {typeof plan.price.monthly === "number" ? (
+                    <>
+                      <span className="text-4xl font-bold text-gray-900 tracking-tight">
+                        ${isYearly ? plan.price.yearly : plan.price.monthly}
+                      </span>
+                      <span className="text-gray-500 font-medium text-sm">
+                        /{isYearly ? <TranslatableText text="yr" /> : <TranslatableText text="mo" />}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-3xl font-bold text-gray-900 tracking-tight">
+                      <TranslatableText text="Custom" />
+                    </span>
+                  )}
                 </div>
                 <p className="text-sm text-gray-500 mt-4 leading-relaxed h-10">
                   <TranslatableText text={plan.description} />
@@ -264,7 +369,7 @@ export default function PricingPage() {
               </div>
 
               {/* Action Button */}
-              <Link href={plan.slug === 'custom' ? '/contact' : `/business/login`} className="w-full">
+              {/* <Link href={plan.slug === 'custom' ? '/contact' : `/business/login`} className="w-full">
                 <Button 
                   className={cn(
                     "w-full h-12 font-bold text-sm rounded-full transition-all",
@@ -274,16 +379,27 @@ export default function PricingPage() {
                   )}
                 >
                   <TranslatableText text={plan.buttonText} />
-                </Button>
-              </Link>
+                </Button >
+              </Link> */}
 
+              <Button
+                onClick={() => payementHandler(plan, session)}
+                className={cn(
+                  "w-full h-12 font-bold text-sm rounded-full transition-all",
+                  plan.popular
+                    ? "bg-[#0ABED6] hover:bg-[#09A8BD] text-white"
+                    : "bg-gray-900 text-white hover:bg-gray-800"
+                )}
+              >
+                <TranslatableText text={plan.buttonText} />
+              </Button>
               {/* Divider */}
               <div className="h-px w-full bg-gray-100 my-8" />
 
               {/* Features - No Icons, just clean list */}
               <div className="flex-1">
                 <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">
-                    <TranslatableText text="Includes" />
+                  <TranslatableText text="Includes" />
                 </p>
                 <ul className="space-y-3">
                   {plan.features.map((feature, i) => (
@@ -341,7 +457,7 @@ export default function PricingPage() {
                         <TranslatableText text={section.category} />
                       </td>
                     </tr>
-                    
+
                     {/* Rows */}
                     {section.items.map((item, i) => (
                       <tr key={`${section.category}-${i}`} className="group hover:bg-gray-50 transition-colors">
@@ -373,19 +489,19 @@ export default function PricingPage() {
 function renderCell(value: boolean | string) {
   if (value === true) return (
     <div className="flex justify-center">
-        <div className="h-2.5 w-2.5 rounded-full bg-[#0ABED6]" />
+      <div className="h-2.5 w-2.5 rounded-full bg-[#0ABED6]" />
     </div>
   );
-  
+
   if (value === false) return (
     <div className="flex justify-center">
-        <div className="h-px w-3 bg-gray-300" />
+      <div className="h-px w-3 bg-gray-300" />
     </div>
-  ); 
-  
+  );
+
   return (
     <span className="text-sm font-medium text-gray-900 bg-gray-100 px-2 py-1 rounded text-xs">
-        <TranslatableText text={value} />
+      <TranslatableText text={value} />
     </span>
   );
 }

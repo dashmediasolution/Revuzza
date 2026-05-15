@@ -5,6 +5,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from "@/components/ui/sonner";
 import { TranslationProvider } from "@/components/shared/translation-context";
+import { SessionProvider } from "next-auth/react";
 
 const noto = Noto_Sans_JP({
   subsets: ['latin'],
@@ -34,10 +35,12 @@ export default function RootLayout({
           noto.variable
         )}
       >
+        <SessionProvider>
         <TranslationProvider>
         {children}
         <Toaster /> {/* Global Toaster for notifications */}
         </TranslationProvider>
+        </SessionProvider>
       </body>
     </html>
   );

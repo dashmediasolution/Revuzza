@@ -100,21 +100,19 @@ export function CompanyHeader({
               
               {/* Trust Badge:Only show if claimed */}
               {claimed && (
-                <TooltipProvider delayDuration={300}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="hidden md:flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full ml-2 cursor-help">
-                        <ShieldCheck className="h-3.5 w-3.5" />
-                        <TranslatableText text="Verified Company" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-[250px] bg-gray-900 text-white border-gray-800">
-                      <p className="text-xs leading-relaxed">
-                        <TranslatableText text="This company has claimed their Help profile as their own. Any company can claim theirs for free to reply to reviews, ask customers to review them, and more." />
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="hidden md:flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full ml-2 cursor-help">
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      <TranslatableText text="Verified Company" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px] bg-gray-900 text-white border-gray-800">
+                    <p className="text-xs leading-relaxed">
+                      <TranslatableText text="This company has claimed their Help profile as their own. Any company can claim theirs for free to reply to reviews, ask customers to review them, and more." />
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
               )}
             </div>
           </div>

@@ -5,7 +5,7 @@ import { hash } from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
 // --- CREATE STAFF ---
-export async function createStaffAccount(formData: FormData) {
+export async function createStaffAccount(formData: FormData) {  
   const name = formData.get("name") as string;
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;

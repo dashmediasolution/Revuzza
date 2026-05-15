@@ -32,7 +32,11 @@ export function CreateCampaignForm({ userEmail, isLimitReached = false, batchSiz
    useEffect(() => {
       if (state?.success) {
          if (state.status === "DRAFT") toast.success("Campaign saved as draft.");
-         else toast.success("Campaign sent successfully!");
+         else if (state.partialSuccess) {
+            toast.warning(state.message);
+         } else {
+            toast.success("Campaign sent successfully!");
+         }
          
          formRef.current?.reset();
          setContent("<p>Write your message here...</p>");

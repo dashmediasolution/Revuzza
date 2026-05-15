@@ -1,4 +1,5 @@
-// auth.ts
+// auth.ts  
+
 import NextAuth from 'next-auth';
 import { authConfig } from './auth.config';
 import Credentials from 'next-auth/providers/credentials';
@@ -7,6 +8,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { PrismaAdapter } from '@auth/prisma-adapter';
+
 
 async function getUser(email: string) {
   try {
@@ -18,6 +20,10 @@ async function getUser(email: string) {
   }
 }
 
+
+
+
+
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(prisma),
@@ -28,9 +34,9 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         // 1. On sign in, user object is available. Copy ID to token.
-        token.id = user.id;
-        token.role = user.role || 'USER';
-        token.companyId = user.companyId; 
+        token.id = user.id as string;
+        token.role = user.role as string || 'USER';
+        token.companyId = user.companyId as string; 
       }
       return token;
     },

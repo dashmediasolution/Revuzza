@@ -6,7 +6,9 @@ import { authenticate } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, AlertCircle, Sparkles, Quote, Flag, ThumbsUp} from 'lucide-react';
+import { Eye, EyeClosed } from "lucide-react";
+
+import { Loader2, AlertCircle, Sparkles, Quote, Flag, ThumbsUp } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { SocialButton } from './social-button';
@@ -18,13 +20,14 @@ import { translateContent } from "@/lib/translation-action";
 
 // Helper hook for placeholders
 const useTranslatedPlaceholder = (text: string) => {
-    const { targetLang } = useTranslation();
-    const [translated, setTranslated] = useState(text);
-    useEffect(() => {
-        if (targetLang === 'en') { setTranslated(text); return; }
-        translateContent(text, targetLang).then(res => { if(res.translation) setTranslated(res.translation) });
-    }, [targetLang, text]);
-    return translated;
+  const { targetLang } = useTranslation();
+
+  const [translated, setTranslated] = useState(text);
+  useEffect(() => {
+    if (targetLang === 'en') { setTranslated(text); return; }
+    translateContent(text, targetLang).then(res => { if (res.translation) setTranslated(res.translation) });
+  }, [targetLang, text]);
+  return translated;
 };
 
 function LoginButton() {
@@ -39,7 +42,7 @@ function LoginButton() {
 export function LoginForm() {
   const [errorMessage, formAction] = useActionState(authenticate, undefined);
   const searchParams = useSearchParams();
-  
+  const [showPassword, setShowPassword] = useState(false);
   const isRegistered = searchParams.get('registered') === 'true';
   const messageCode = searchParams.get('message');
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
@@ -49,49 +52,49 @@ export function LoginForm() {
 
   return (
     <div className="grid md:grid-cols-2 bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-      
+
       {/* --- LEFT COLUMN: Brand & Visuals --- */}
       <div className="relative hidden md:flex flex-col justify-between bg-[#000032] p-10 text-white">
         {/* Background decoration */}
         <div className="absolute inset-0 opacity-20">
-           <Image 
-             src="/images/welcome.png"
-             alt="Background"
-             fill
-             className="object-cover"
-             priority
-           />
+          <Image
+            src="/images/welcome.png"
+            alt="Background"
+            fill
+            className="object-cover"
+            priority
+          />
         </div>
 
         {/* Content overlay */}
         <div className="relative z-10">
-           <Link href="/" className="text-3xl font-bold tracking-tight text-white">
-             help
-           </Link>
+          <Link href="/" className="text-3xl font-bold tracking-tight text-white">
+            help
+          </Link>
         </div>
 
         <div className="relative z-10 space-y-6">
-           <Quote className="h-8 w-8 text-[#0ABED6] opacity-80" />
-           <p className="text-xl font-medium leading-relaxed">
-             "<TranslatableText text="Help is the world's most powerful review platform, free and open to all. Our mission is to bring people and companies together to create ever-improving experiences for everyone." />"
-           </p>
-           <div className="pt-4">
-              <p className="text-sm text-gray-400 font-semibold tracking-wide uppercase">
-                <TranslatableText text="Trust & Transparency" />
-              </p>
-           </div>
+          <Quote className="h-8 w-8 text-[#0ABED6] opacity-80" />
+          <p className="text-xl font-medium leading-relaxed">
+            "<TranslatableText text="Help is the world's most powerful review platform, free and open to all. Our mission is to bring people and companies together to create ever-improving experiences for everyone." />"
+          </p>
+          <div className="pt-4">
+            <p className="text-sm text-gray-400 font-semibold tracking-wide uppercase">
+              <TranslatableText text="Trust & Transparency" />
+            </p>
+          </div>
         </div>
       </div>
 
       {/* --- RIGHT COLUMN: Login Form --- */}
       <div className="p-8 md:p-12 flex flex-col justify-center h-full">
-        
+
         <div className="text-center space-y-2 mb-8">
           <h1 className="text-2xl font-bold text-gray-900">
-             <TranslatableText text="Welcome back" />
+            <TranslatableText text="Welcome back" />
           </h1>
           <p className="text-sm text-gray-500">
-             <TranslatableText text="Log in to manage your reviews" />
+            <TranslatableText text="Log in to manage your reviews" />
           </p>
         </div>
 
@@ -105,7 +108,7 @@ export function LoginForm() {
             </div>
           </div>
         )}
-        
+
         {messageCode === 'vote_required' && (
           <div className="mb-6 p-4 bg-cyan-50 border border-cyan-100 rounded-lg flex items-start gap-3 text-cyan-900">
             <ThumbsUp className="h-5 w-5 shrink-0 mt-0.5 text-[#0ABED6]" />
@@ -142,19 +145,19 @@ export function LoginForm() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-white px-2 text-muted-foreground">
-                  <TranslatableText text="Or login with email" />
+                <TranslatableText text="Or login with email" />
               </span>
             </div>
           </div>
 
           <form action={formAction} className="space-y-4">
             <input type="hidden" name="redirectTo" value={callbackUrl} />
-            
+
             <div className="space-y-2">
               <Label htmlFor="email"><TranslatableText text="Email" /></Label>
               <Input id="email" name="email" type="email" placeholder={emailPlaceholder} required className="h-11" />
             </div>
-            
+            {/*             
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password"><TranslatableText text="Password" /></Label>
@@ -163,6 +166,44 @@ export function LoginForm() {
                 </Link>
               </div>
               <Input id="password" name="password" type="password" placeholder="••••••••" required className="h-11" />
+            </div> */}
+
+            <div className="flex items-center justify-between">
+              <label htmlFor="password" className="text-sm font-medium">
+                Password
+              </label>
+
+              <a
+                href="/forgot-password"
+                className="text-xs text-gray-500 hover:text-[#0ABED6] transition-colors"
+              >
+                Forgot password?
+              </a>
+            </div>
+
+            <div className="relative">
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                required
+                className="h-11 pr-10"
+              />
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7"
+              >
+                {showPassword ? (
+                  <Eye className="h-4 w-4" />
+                ) : (
+                  <EyeClosed className="h-4 w-4" />
+                )}
+              </Button>
             </div>
 
             {errorMessage && (

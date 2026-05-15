@@ -1,15 +1,14 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { BusinessSidebar } from "@/components/business_dashboard/business-sidebar";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Lock } from "lucide-react";
-
+import { AlertTriangle, Lock, Menu } from "lucide-react";
+import BusinessDashboardWrapper from "./BusinessDashboardWrapper";
 export default async function BusinessDashboardLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode;  
 }) {
   const session = await auth();
 
@@ -75,13 +74,6 @@ export default async function BusinessDashboardLayout({
     );
   }
 
-  // 6. Normal Render (If not frozen)
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <BusinessSidebar />
-       <main className="flex-1 ml-[3.5rem] p-8 overflow-y-hidden min-h-screen">
-        {children}
-      </main>
-    </div>
-  );
+  // 6. Normal Render (If not frozen) - Pass to client wrapper
+  return <BusinessDashboardWrapper>{children}</BusinessDashboardWrapper>;
 }

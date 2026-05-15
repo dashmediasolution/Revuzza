@@ -47,7 +47,7 @@ export function TopRatedCarousel({ companies }: TopRatedCarouselProps) {
             </div>
           </div>
 
-          <CarouselContent className="-ml-4 pb-4">
+          <CarouselContent className="pb-4">
             {companies.map((company) => (
               <CarouselItem key={company.id} className="pl-4 basis-1/1 md:basis-1/2 lg:basis-1/3 xl:basis-1/3">
                 {/* All company data, including nested testimonials with user data, passed here 

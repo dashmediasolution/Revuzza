@@ -17,7 +17,7 @@ export default async function AdminLayout({
 
   // @ts-ignore
   const userRole = session.user.role;
-
+console.log(userRole, "User Role from Session");
   // 2. ✅ REDIRECT DATA ENTRY STAFF
   if (userRole === 'DATA_ENTRY') {
     redirect('/data-entry');

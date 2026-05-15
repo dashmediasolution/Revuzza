@@ -10,7 +10,7 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
 import { v2 as cloudinary } from 'cloudinary';
 import { generateReviewKeywords } from '@/lib/search-action';
-import { sendApprovalEmail, sendRejectionEmail } from "@/lib/mail";
+import { sendApprovalEmail, sendForgotPasswordEmail, sendRejectionEmail } from "@/lib/mail";
 import { v4 as uuidv4 } from "uuid";
 import { sendDomainVerificationEmail } from "@/lib/mail";
 import crypto from "crypto";
@@ -43,7 +43,7 @@ async function updateCompanyRating(companyId: string) {
   });
 
   const N = reviews.length;
-  
+
   if (N === 0) {
     // No reviews? Reset to 0 (or baseline if you prefer)
     await prisma.company.update({
@@ -62,7 +62,7 @@ async function updateCompanyRating(companyId: string) {
   // 4. Update Company Record
   await prisma.company.update({
     where: { id: companyId },
-    data: { 
+    data: {
       rating: bayesianScore,
       reviewCount: N
     }
@@ -70,20 +70,282 @@ async function updateCompanyRating(companyId: string) {
 }
 
 
+export async function updateAdminDetails(prevState: any, formData: FormData) {
+  const session = await auth();
+
+  // 🔒 Security check
+  if (!session?.user?.id || session?.user?.role !== 'ADMIN') {
+    return { error: "Unauthorized. Admin access required." };
+  }
+
+  const userId = session.user.id;
+  const currentEmail = session.user.email;
+
+  // 📥 Extract form data
+  const name = formData.get('name') as string;
+  const email = formData.get('email') as string;
+  const currentPassword = formData.get('currentPassword') as string;
+  const newPassword = formData.get('newPassword') as string;
+  const confirmPassword = formData.get('confirmPassword') as string;
+
+  // ✅ Name validation
+  if (!name || name.trim().length < 2) {
+    return { error: "Name must be at least 2 characters." };
+  }
+
+  // 🔐 Check if user is attempting to change password
+  const isTryingToChangePassword =
+    currentPassword || newPassword || confirmPassword;
+
+  if (isTryingToChangePassword) {
+    // All fields must be filled
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return { error: "All password fields are required." };
+    }
+
+    // Password match check
+    if (newPassword !== confirmPassword) {
+      return { error: "New password and confirm password do not match." };
+    }
+
+    // Length validation
+    if (newPassword.length < 8) {
+      return { error: "New password must be at least 8 characters." };
+    }
+
+    // Verify current password
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { password: true }
+    });
+
+    if (!user) {
+      return { error: "User not found." };
+    }
+
+    const isValidPassword = await bcrypt.compare(
+      currentPassword,
+      user.password
+    );
+
+    if (!isValidPassword) {
+      return { error: "Current password is incorrect." };
+    }
+  }
+
+  try {
+    // 📧 Email uniqueness check (only if changed)
+    if (email && email.trim() !== currentEmail) {
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          email: email.trim(),
+          NOT: { id: userId }
+        }
+      });
+
+      if (existingUser) {
+        return { error: "Email already in use by another user." };
+      }
+    }
+
+    // 🧱 Prepare update data
+    const updateData: any = {
+      name: name.trim(),
+    };
+
+    if (email && email.trim() !== currentEmail) {
+      updateData.email = email.trim();
+    }
+
+    // 🔑 Update password ONLY if full valid flow
+    if (isTryingToChangePassword) {
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      updateData.password = hashedPassword;
+    }
+
+    // 💾 Update user
+    const data = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        name: true,
+        email: true,
+        image: true
+      }
+    });
+
+    // 🔄 Revalidate pages
+    revalidatePath('/admin/profile');
+    revalidatePath('/admin');
+    revalidatePath('/admin/settings');
+
+    return { success: true, data };
+
+  } catch (error) {
+    console.error("Update Admin Details Error:", error);
+    return { error: "Failed to update admin details. Please try again." };
+  }
+}
+
+
+export async function forgotPassword(email: string) {
+
+  // 1. Check user (pseudo DB)
+  const user = await prisma.user.findUnique({ where: { email } });
+  console.log('Database query completed. User:', user);
+  if (!user) {
+    return { error: "User not found" };
+  }
+  // 2. Generate token
+  const token = crypto.randomBytes(32).toString("hex");
+
+  // 3. Save token + expiry
+  await prisma.passwordResetToken.create({
+    data: {
+      email,
+      token,
+      expiresAt: new Date(Date.now() + 1000 * 60 * 2), // 2 min
+    },
+  });
+
+  // 4. Send email (pseudo)
+
+  await sendForgotPasswordEmail(email, token);
+  return { success: "Reset link sent" };
+}
+
+
+export async function resetPasswordAction({
+  token,
+  password,
+}: {
+  token: string;
+  password: string;
+}) {
+  const record = await prisma.passwordResetToken.findUnique({
+    where: { token },
+  });
+
+  if (!record) return { error: "Invalid token" };
+
+  if (record.expiresAt < new Date()) {
+    return { error: "Token expired" };
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  await prisma.user.update({
+    where: { email: record.email },
+    data: { password: hashedPassword },
+  });
+
+  await prisma.passwordResetToken.delete({
+    where: { token },
+  });
+
+  return { success: "Password updated" };
+}
+
 export async function authenticate(prevState: any, formData: FormData) {
   try {
     // 1. Capture the redirect URL (defaults to dashboard if missing)
     const redirectTo = formData.get('redirectTo') as string || '/dashboard';
-    
-    // 2. Attempt to sign in
-    await signIn('credentials', {
-      email: formData.get('email'),
-      password: formData.get('password'),
-      redirectTo, // <--- Important: This sends user to /admin or /dashboard correctly
+
+    // 2. Get email and password from form
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    // 3. Validate credentials first
+    const parsedCredentials = z
+      .object({ email: z.string().email(), password: z.string().min(6) })
+      .safeParse({ email, password });
+
+    if (!parsedCredentials.success) {
+      return 'Invalid email or password format.';
+    }
+
+    // 4. Fetch user from database to check role
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, password: true, role: true }
     });
+
+    if (!user || !user.password) {
+      return 'Invalid credentials.';
+    }
+
+    // 5. Verify password
+    const passwordsMatch = await bcrypt.compare(password, user.password);
+    if (!passwordsMatch) {
+      return 'Invalid credentials.';
+    }
+
+    // 6. Role-based portal access control
+    const staffRoles = ['ADMIN', 'DATA_ENTRY', 'BLOG_ENTRY'];
+    const isStaffPortal = redirectTo.startsWith('/admin');
+    const isBusinessPortal = redirectTo.startsWith('/business');
+    const isUserPortal = redirectTo === '/dashboard';
+
+    // === STRICT PORTAL ACCESS RULES ===
     
+    // Rule 1: Staff portal (/admin/login) - ONLY staff roles allowed
+    if (isStaffPortal) {
+      if (!staffRoles.includes(user.role)) {
+        return 'This portal is for staff only. Please use the regular login page.';
+      }
+      // Staff users go to /admin
+      await signIn('credentials', {
+        email,
+        password,
+        redirectTo: '/admin',
+      });
+      return;
+    }
+
+    // Rule 2: Business portal (/business/login) - ONLY business role allowed
+    if (isBusinessPortal) {
+      if (user.role !== 'BUSINESS') {
+        return 'This portal is for business accounts only. Please use the regular login page.';
+      }
+      // Business users go to /business
+      await signIn('credentials', {
+        email,
+        password,
+        redirectTo: '/business/dashboard',
+      });
+      return;
+    }
+
+    // Rule 3: Regular user portal (/login) - ONLY regular USER role allowed
+    if (isUserPortal) {
+      if (user.role !== 'USER') {
+        return 'Staff and business accounts must use their dedicated login pages.';
+      }
+      // Regular users go to /dashboard
+      await signIn('credentials', {
+        email,
+        password,
+        redirectTo: '/dashboard',
+      });
+      return;
+    }
+
+    // Fallback: Default redirect based on role
+    let finalRedirect = '/dashboard';
+    if (staffRoles.includes(user.role)) {
+      finalRedirect = '/admin';
+    } else if (user.role === 'BUSINESS') {
+      finalRedirect = '/business';
+    }
+
+    await signIn('credentials', {
+      email,
+      password,
+      redirectTo: finalRedirect,
+    });
+
   } catch (error) {
-    // 3. Handle specific NextAuth errors
+    // 9. Handle specific NextAuth errors
     if (error instanceof AuthError) {
       switch (error.type) {
         case 'CredentialsSignin':
@@ -92,7 +354,7 @@ export async function authenticate(prevState: any, formData: FormData) {
           return 'Something went wrong.';
       }
     }
-    // 4. Re-throw the redirect error (Next.js needs this to actually redirect)
+    // 10. Re-throw the redirect error (Next.js needs this to actually redirect)
     throw error;
   }
 }
@@ -147,7 +409,7 @@ export async function socialLogin(formData: FormData) {
   const action = formData.get('action') as string;
   // Ensure this line is exactly as follows:
   const redirectTo = formData.get('redirectTo') as string || '/dashboard';
-  
+
   await signIn(action, { redirectTo });
 }
 
@@ -167,7 +429,7 @@ export async function createReview(prevState: any, formData: FormData) {
   const imageFiles = formData.getAll('images') as File[];
 
   if (!rating || rating < 1 || rating > 5) return { error: "Please select a rating." };
-  
+
   try {
     // --- Image Upload Logic (Unchanged) ---
     const uploadedImageUrls: string[] = [];
@@ -178,9 +440,10 @@ export async function createReview(prevState: any, formData: FormData) {
           const buffer = Buffer.from(arrayBuffer);
           return new Promise<string>((resolve, reject) => {
             cloudinary.uploader.upload_stream(
-              { folder: "review_images",
+              {
+                folder: "review_images",
                 transformation: [{ width: 800, crop: "limit", quality: "auto", fetch_format: "auto" }]
-               },
+              },
               (error, result) => {
                 if (error) reject(error);
                 else resolve(result!.secure_url);
@@ -202,16 +465,16 @@ export async function createReview(prevState: any, formData: FormData) {
       // Your function ALREADY returns strings like "staff:positive:great service"
       // So we just use the result directly.
       const aiKeywords = await generateReviewKeywords(content);
-      
+
       console.log("AI Keywords Generated:", aiKeywords);
-      
+
       if (Array.isArray(aiKeywords)) {
         formattedKeywords = aiKeywords;
       }
     } catch (aiError) {
       console.error("AI Generation Warning (Saving review anyway):", aiError);
       // We proceed with empty keywords so the review isn't blocked
-      formattedKeywords = []; 
+      formattedKeywords = [];
     }
 
     // 3. Save to Database
@@ -223,9 +486,9 @@ export async function createReview(prevState: any, formData: FormData) {
         dateOfExperience: dateString ? new Date(dateString) : new Date(),
         companyId: companyId,
         userId: userId,
-        relatedImages: uploadedImageUrls, 
+        relatedImages: uploadedImageUrls,
         // ✅ Save the correctly formatted strings
-        keywords: formattedKeywords, 
+        keywords: formattedKeywords,
       },
     });
 
@@ -254,7 +517,7 @@ export async function updateReview(prevState: any, formData: FormData) {
   const rating = parseFloat(formData.get('rating') as string);
   const title = formData.get('title') as string;
   const content = formData.get('content') as string;
-  
+
   // 1. Get the date
   const dateString = formData.get('date') as string;
 
@@ -263,16 +526,16 @@ export async function updateReview(prevState: any, formData: FormData) {
 
   try {
     await prisma.review.update({
-      where: { 
+      where: {
         id: reviewId,
-        userId: userId 
+        userId: userId
       },
       data: {
         starRating: rating,
         reviewTitle: title,
         comment: content,
         dateOfExperience: dateString ? new Date(dateString) : undefined,
-        isFlagged: false,   
+        isFlagged: false,
         adminMessage: null,
       },
     });
@@ -280,27 +543,27 @@ export async function updateReview(prevState: any, formData: FormData) {
     // --- NEW: SEND CONFIRMATION TO ADMIN ---
     // Find any open reports linked to this review that were waiting for an edit
     const relatedReports = await prisma.report.findMany({
-        where: { 
-            reviewId: reviewId,
-            status: "WAITING_FOR_EDIT" // Only update the ones waiting on us
-        }
+      where: {
+        reviewId: reviewId,
+        status: "WAITING_FOR_EDIT" // Only update the ones waiting on us
+      }
     });
 
     // Update them to "EDITED" so Admin sees the green status
     if (relatedReports.length > 0) {
-        await prisma.report.updateMany({
-            where: { reviewId: reviewId, status: "WAITING_FOR_EDIT" },
-            data: { status: "RESOLVED" } // <--- This is your confirmation signal
-        });
+      await prisma.report.updateMany({
+        where: { reviewId: reviewId, status: "WAITING_FOR_EDIT" },
+        data: { status: "RESOLVED" } // <--- This is your confirmation signal
+      });
     }
 
-    const review = await prisma.review.findUnique({ 
-        where: { id: reviewId },
-        select: { companyId: true } 
+    const review = await prisma.review.findUnique({
+      where: { id: reviewId },
+      select: { companyId: true }
     });
-    
+
     if (review) {
-        await updateCompanyRating(review.companyId);
+      await updateCompanyRating(review.companyId);
     }
 
     revalidatePath('/dashboard');
@@ -325,14 +588,14 @@ export async function deleteReviewAction(reviewId: string, companySlug: string) 
     const deletedReview = await prisma.review.delete({
       where: {
         id: reviewId,
-        userId: userId, 
+        userId: userId,
       },
       select: { companyId: true } // <--- IMPORTANT: Get the ID back
     });
 
     // 2. Recalculate score for that company
     if (deletedReview) {
-        await updateCompanyRating(deletedReview.companyId);
+      await updateCompanyRating(deletedReview.companyId);
     }
 
     revalidatePath('/dashboard');
@@ -371,7 +634,7 @@ export async function updateUserProfile(prevState: any, formData: FormData) {
       // Upload to Cloudinary via Promise
       const uploadResult = await new Promise<any>((resolve, reject) => {
         cloudinary.uploader.upload_stream(
-          { folder: "user_avatars", transformation: [{ width: 400, height: 400, crop: "fill",quality: "auto", fetch_format: "auto" }] },
+          { folder: "user_avatars", transformation: [{ width: 400, height: 400, crop: "fill", quality: "auto", fetch_format: "auto" }] },
           (error, result) => {
             if (error) reject(error);
             else resolve(result);
@@ -463,9 +726,9 @@ export async function toggleHelpful(reviewId: string, currentPath: string) {
 
     // Refresh the page to show the new count instantly
     revalidatePath(currentPath);
-    
+
     // Also refresh the dashboard
-    revalidatePath('/dashboard'); 
+    revalidatePath('/dashboard');
 
     return { success: true };
   } catch (error) {
@@ -493,13 +756,13 @@ export async function incrementReviewReads(reviewIds: string[]) {
     // Update each one individually to ensure it works
     for (const r of reviews) {
       const currentReads = r.reads || 0; // Force 0 if null
-      
+
       await prisma.review.update({
         where: { id: r.id },
         data: { reads: currentReads + 1 }
       });
     }
-    
+
     console.log("✅ Successfully incremented reads for", reviews.length, "reviews.");
 
   } catch (error) {
@@ -536,8 +799,8 @@ export async function incrementCompanyView(companyId: string) {
     // 3. Explicitly SET the new value (bypassing atomic increment)
     const result = await prisma.company.update({
       where: { id: companyId },
-      data: { 
-        views: newCount 
+      data: {
+        views: newCount
       }
     });
 
@@ -573,11 +836,11 @@ export async function adminDeleteCompany(companyId: string) {
 
 export async function upsertCompany(prevState: any, formData: FormData) {
   const session = await auth();
-  
+
   // @ts-ignore
   const userRole = session?.user?.role;
   if (userRole !== 'ADMIN' && userRole !== 'DATA_ENTRY') {
-      return { error: "Unauthorized" };
+    return { error: "Unauthorized" };
   }
   // @ts-ignore
   const userId = session?.user?.id;
@@ -599,20 +862,20 @@ export async function upsertCompany(prevState: any, formData: FormData) {
 
   // --- EXTRACT FIELDS ---
   const name = getVal('name');
-  const website = getVal('websiteUrl') || getVal('website'); 
+  const website = getVal('websiteUrl') || getVal('website');
   const categoryId = getVal('categoryId');
   const subCategoryId = getVal('subCategoryId');
-  const description = getVal('briefIntroduction') || getVal('description'); 
-  
+  const description = getVal('briefIntroduction') || getVal('description');
+
   // --- LOCATION ---
   const city = getVal('city');
   const country = getVal('country');
   const state = getVal('state');
   const subCity = getVal('subCity');
   const address = getVal('address');
-  
-  const companyType = getVal('companyType') as 'SERVICE' | 'PRODUCT'; 
-  
+
+  const companyType = getVal('companyType') as 'SERVICE' | 'PRODUCT';
+
   // --- CONTACT INFO LOGIC ---
   // We prefer form data, then fall back to existing nested contact data
   const emailInput = formData.get('contactEmail') as string || existingCompany?.contact?.email || "";
@@ -623,45 +886,45 @@ export async function upsertCompany(prevState: any, formData: FormData) {
   let domainVerified = existingCompany?.domainVerified || null;
 
   if (userRole === 'ADMIN') {
-      // ✅ FIX: Directly assign the result. 
-      // If key is missing (unchecked), .get() returns null, so it becomes false.
-      claimed = formData.get('claimed') === 'on';
+    // ✅ FIX: Directly assign the result. 
+    // If key is missing (unchecked), .get() returns null, so it becomes false.
+    claimed = formData.get('claimed') === 'on';
 
-      // ✅ FIX: Same logic for domainVerified. 
-      // If key is missing, we set it to null (unverified).
-      if (formData.get('domainVerified') === 'on') {
-          // Only update date if it wasn't already verified to avoid resetting the date
-          domainVerified = existingCompany?.domainVerified || new Date();
-      } else {
-          domainVerified = null;
-      }
+    // ✅ FIX: Same logic for domainVerified. 
+    // If key is missing, we set it to null (unverified).
+    if (formData.get('domainVerified') === 'on') {
+      // Only update date if it wasn't already verified to avoid resetting the date
+      domainVerified = existingCompany?.domainVerified || new Date();
+    } else {
+      domainVerified = null;
+    }
   }
-  
+
   // --- KEYWORDS ---
   const keywordsInput = formData.get('keywords') as string;
   let keywords = existingCompany?.keywords || [name.toLowerCase()];
   if (formData.has('keywords')) {
-      keywords = keywordsInput
-        ? keywordsInput.split(',').map((k) => k.trim().toLowerCase()).filter(Boolean)
-        : [];
+    keywords = keywordsInput
+      ? keywordsInput.split(',').map((k) => k.trim().toLowerCase()).filter(Boolean)
+      : [];
   }
 
   // --- IMAGES ---
   const logoFile = formData.get('logo') as File;
-  const otherImageFiles = formData.getAll('otherImages') as File[]; 
-  
+  const otherImageFiles = formData.getAll('otherImages') as File[];
+
   const retainedImagesJson = formData.get('retainedImages') as string;
   let retainedImages: string[] = [];
   if (retainedImagesJson) {
-      try { retainedImages = JSON.parse(retainedImagesJson); } catch (e) {}
+    try { retainedImages = JSON.parse(retainedImagesJson); } catch (e) { }
   } else if (existingCompany) {
-      retainedImages = existingCompany.otherImages || [];
+    retainedImages = existingCompany.otherImages || [];
   }
 
   if (!name || !categoryId) return { error: "Name and Category are required." };
 
   try {
-    let logoUrl = existingCompany?.logoImage; 
+    let logoUrl = existingCompany?.logoImage;
 
     if (logoFile && logoFile.size > 0) {
       const arrayBuffer = await logoFile.arrayBuffer();
@@ -691,7 +954,7 @@ export async function upsertCompany(prevState: any, formData: FormData) {
         return null;
       });
       const results = await Promise.all(uploadPromises);
-      results.forEach(url => { if(url) newImageUrls.push(url) });
+      results.forEach(url => { if (url) newImageUrls.push(url) });
     }
 
     const finalGalleryImages = [...retainedImages, ...newImageUrls];
@@ -701,7 +964,7 @@ export async function upsertCompany(prevState: any, formData: FormData) {
       name,
       websiteUrl: website,
       categoryId,
-      subCategoryId, 
+      subCategoryId,
       briefIntroduction: description,
       city,
       country,
@@ -723,60 +986,60 @@ export async function upsertCompany(prevState: any, formData: FormData) {
 
       // These keys are temporarily kept here if needed for legacy logic or Data Entry review,
       // BUT we must remove them before sending to Prisma.
-      contactEmail: emailInput, 
+      contactEmail: emailInput,
       phone: phoneInput,
 
       foundedYear: getVal('foundedYear') || existingCompany?.foundedYear,
       metaTitle: getVal('metaTitle') || existingCompany?.metaTitle,
       metaDescription: getVal('metaDescription') || existingCompany?.metaDescription,
-      socialLinks: existingCompany?.socialLinks || {}, 
+      socialLinks: existingCompany?.socialLinks || {},
     };
 
     if (!companyId && !dataPayload.subCategoryId) {
-         const category = await prisma.category.findUnique({
-            where: { id: categoryId },
-            include: { subCategories: true }
-         });
-         if (category && category.subCategories.length > 0) {
-             dataPayload.subCategoryId = category.subCategories[0].id;
-         }
+      const category = await prisma.category.findUnique({
+        where: { id: categoryId },
+        include: { subCategories: true }
+      });
+      if (category && category.subCategories.length > 0) {
+        dataPayload.subCategoryId = category.subCategories[0].id;
+      }
     }
 
     if (!companyId) {
-        dataPayload.slug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+      dataPayload.slug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
     }
 
     // --- DATA ENTRY (Pending Request) ---
     if (userRole === 'DATA_ENTRY') {
-        await prisma.pendingChange.create({
-            data: {
-                model: "COMPANY",
-                action: companyId ? "UPDATE" : "CREATE",
-                targetId: companyId || null,
-                data: dataPayload, 
-                requesterId: userId as string,
-                status: "PENDING"
-            }
-        });
-        
-        revalidatePath('/data-entry/companies');
-        return { success: true, message: "Request submitted for Admin Approval." };
+      await prisma.pendingChange.create({
+        data: {
+          model: "COMPANY",
+          action: companyId ? "UPDATE" : "CREATE",
+          targetId: companyId || null,
+          data: dataPayload,
+          requesterId: userId as string,
+          status: "PENDING"
+        }
+      });
+
+      revalidatePath('/data-entry/companies');
+      return { success: true, message: "Request submitted for Admin Approval." };
     }
 
     // --- ADMIN (Direct Execution) ---
     if (companyId) {
       // ✅ FIX: Sanitize payload for UPDATE
-      const { 
-        categoryId, 
-        subCategoryId, 
-        socialLinks, 
-        foundedYear, 
-        metaTitle, 
-        metaDescription, 
+      const {
+        categoryId,
+        subCategoryId,
+        socialLinks,
+        foundedYear,
+        metaTitle,
+        metaDescription,
         createdAt,
         contactEmail, // <--- REMOVE THIS
         phone,        // <--- REMOVE THIS
-        ...restData 
+        ...restData
       } = dataPayload;
 
       const updateData: any = { ...restData };
@@ -791,16 +1054,16 @@ export async function upsertCompany(prevState: any, formData: FormData) {
       });
     } else {
       // ✅ FIX: Sanitize payload for CREATE as well
-      const { 
-          socialLinks, 
-          foundedYear, 
-          metaTitle, 
-          metaDescription, 
-          contactEmail, // <--- REMOVE THIS
-          phone,        // <--- REMOVE THIS
-          ...createData 
+      const {
+        socialLinks,
+        foundedYear,
+        metaTitle,
+        metaDescription,
+        contactEmail, // <--- REMOVE THIS
+        phone,        // <--- REMOVE THIS
+        ...createData
       } = dataPayload;
-      
+
       await prisma.company.create({
         data: createData
       });
@@ -828,12 +1091,12 @@ export async function updateCompanyBadges(companyId: string, badges: string[]) {
       // 2. Fetch the company to identify its Category/Sub-Category
       const company = await prisma.company.findUnique({
         where: { id: companyId },
-        select: { 
-          categoryId: true, 
-          subCategoryId: true, 
-          badges: true, 
-          name: true 
-        } 
+        select: {
+          categoryId: true,
+          subCategoryId: true,
+          badges: true,
+          name: true
+        }
       });
 
       if (!company) return { error: "Company not found" };
@@ -847,20 +1110,20 @@ export async function updateCompanyBadges(companyId: string, badges: string[]) {
         // 4. Build the Filter
         // We want to count OTHER companies in the SAME group that HAVE the badge.
         const whereClause: any = {
-           badges: { has: "MOST_RELEVANT" }, // Look for badge in array
-           id: { not: companyId }            // Exclude self
+          badges: { has: "MOST_RELEVANT" }, // Look for badge in array
+          id: { not: companyId }            // Exclude self
         };
 
         // 5. Determine Scope
         // If it's in a Sub-Category, we limit based on that Sub-Category.
         // Otherwise, we limit based on the Main Category.
         let scopeName = "Main Category";
-        
+
         if (company.subCategoryId) {
-           whereClause.subCategoryId = company.subCategoryId;
-           scopeName = "Sub-Category";
+          whereClause.subCategoryId = company.subCategoryId;
+          scopeName = "Sub-Category";
         } else {
-           whereClause.categoryId = company.categoryId;
+          whereClause.categoryId = company.categoryId;
         }
 
         // 6. Count existing badges in that scope
@@ -868,8 +1131,8 @@ export async function updateCompanyBadges(companyId: string, badges: string[]) {
 
         // 7. Validation Rule: Max 5
         if (count >= 5) {
-          return { 
-            error: `Limit Reached: 5 companies in this ${scopeName} already have "Most Relevant". Remove the badge from another company first.` 
+          return {
+            error: `Limit Reached: 5 companies in this ${scopeName} already have "Most Relevant". Remove the badge from another company first.`
           };
         }
       }
@@ -883,8 +1146,8 @@ export async function updateCompanyBadges(companyId: string, badges: string[]) {
 
     // 9. Refresh pages so the new badge shows up immediately
     revalidatePath("/admin/companies");
-    revalidatePath("/categories"); 
-    
+    revalidatePath("/categories");
+
     return { success: true };
 
   } catch (error) {
@@ -895,9 +1158,9 @@ export async function updateCompanyBadges(companyId: string, badges: string[]) {
 
 // --- 15. ADMIN: RESOLVE REPORT ---
 export async function resolveReport(
-  reportId: string, 
-  reviewId: string, 
-  action: 'DELETE' | 'KEEP' | 'WARN', 
+  reportId: string,
+  reviewId: string,
+  action: 'DELETE' | 'KEEP' | 'WARN',
   adminNote: string
 ) {
   console.log("🚀 START: resolveReport called with:", { reportId, action, adminNote }); // DEBUG LOG
@@ -906,85 +1169,85 @@ export async function resolveReport(
   if (session?.user?.role !== 'ADMIN') return { error: "Unauthorized" };
 
   try {
-    const report = await prisma.report.findUnique({ 
-        where: { id: reportId },
-        include: { review: { include: { user: true } }, user: true }
+    const report = await prisma.report.findUnique({
+      where: { id: reportId },
+      include: { review: { include: { user: true } }, user: true }
     });
 
     if (!report) {
-        console.error("❌ ERROR: Report not found in DB"); // DEBUG LOG
-        return { error: "Report not found" };
+      console.error("❌ ERROR: Report not found in DB"); // DEBUG LOG
+      return { error: "Report not found" };
     }
-    
+
     const reviewAuthorId = report.review?.userId;
     console.log("👤 Review Author ID found:", reviewAuthorId); // DEBUG LOG
 
     // --- 1. DEFINE MESSAGES ---
     let authorMessage = adminNote;
     if (!authorMessage) {
-        if (action === 'WARN') authorMessage = "Your review has been flagged. Please check the dashboard and edit it to comply with our community guidelines.";
-        if (action === 'DELETE') authorMessage = "Your review was removed because it violated our community guidelines.";
-        if (action === 'KEEP') authorMessage = "No action needed."; 
+      if (action === 'WARN') authorMessage = "Your review has been flagged. Please check the dashboard and edit it to comply with our community guidelines.";
+      if (action === 'DELETE') authorMessage = "Your review was removed because it violated our community guidelines.";
+      if (action === 'KEEP') authorMessage = "No action needed.";
     }
 
     let reporterMessage = "";
     if (action === 'WARN') {
-        reporterMessage = "We have reviewed your report and requested the author to edit their content.";
+      reporterMessage = "We have reviewed your report and requested the author to edit their content.";
     } else if (action === 'DELETE') {
-        reporterMessage = "We have removed the content that violated our policies. Thank you for reporting.";
+      reporterMessage = "We have removed the content that violated our policies. Thank you for reporting.";
     } else {
-        reporterMessage = "We investigated your report and found the content does not violate our current guidelines.";
+      reporterMessage = "We investigated your report and found the content does not violate our current guidelines.";
     }
 
     // --- 2. DETERMINE NEW STATUS ---
-    let newStatus = "RESOLVED"; 
+    let newStatus = "RESOLVED";
     if (action === 'WARN') {
-        newStatus = "WAITING_FOR_EDIT"; 
+      newStatus = "WAITING_FOR_EDIT";
     }
 
     // --- 3. HANDLE REVIEW MODIFICATION ---
     if (action === 'DELETE' && reviewId) {
-        await prisma.review.delete({ where: { id: reviewId } });
-        console.log("🗑️ Review deleted");
+      await prisma.review.delete({ where: { id: reviewId } });
+      console.log("🗑️ Review deleted");
     }
 
     if (action === 'WARN' && reviewId) {
-        await prisma.review.update({
-            where: { id: reviewId },
-            data: { isFlagged: true, adminMessage: authorMessage } 
-        });
-        console.log("🚩 Review Flagged successfully");
+      await prisma.review.update({
+        where: { id: reviewId },
+        data: { isFlagged: true, adminMessage: authorMessage }
+      });
+      console.log("🚩 Review Flagged successfully");
     }
 
     // --- 4. NOTIFY AUTHOR ---
     if (reviewAuthorId && action !== 'KEEP') {
-        console.log("🔔 Attempting to create notification for:", reviewAuthorId); // DEBUG LOG
-        
-        try {
-            await prisma.notification.create({
-                data: {
-                    userId: reviewAuthorId,
-                    type: 'ALERT',
-                    title: action === 'DELETE' ? 'Your Review was Removed' : 'Action Required: Review Flagged',
-                    message: authorMessage,
-                }
-            });
-            console.log("✅ Notification Created Successfully!"); // DEBUG LOG
-        } catch (notifError) {
-            console.error("❌ Notification Creation FAILED:", notifError); // DEBUG LOG
-        }
+      console.log("🔔 Attempting to create notification for:", reviewAuthorId); // DEBUG LOG
+
+      try {
+        await prisma.notification.create({
+          data: {
+            userId: reviewAuthorId,
+            type: 'ALERT',
+            title: action === 'DELETE' ? 'Your Review was Removed' : 'Action Required: Review Flagged',
+            message: authorMessage,
+          }
+        });
+        console.log("✅ Notification Created Successfully!"); // DEBUG LOG
+      } catch (notifError) {
+        console.error("❌ Notification Creation FAILED:", notifError); // DEBUG LOG
+      }
     } else {
-        console.log("⚠️ Skipping notification. Reason:", !reviewAuthorId ? "No Author ID" : "Action is KEEP");
+      console.log("⚠️ Skipping notification. Reason:", !reviewAuthorId ? "No Author ID" : "Action is KEEP");
     }
 
     // --- 5. UPDATE REPORT ---
     // NOTE: We are saving 'reporterMessage' directly. NO "Action:" prefix.
     await prisma.report.update({
-        where: { id: reportId },
-        data: {
-            status: newStatus, 
-            resolution: reporterMessage 
-        }
+      where: { id: reportId },
+      data: {
+        status: newStatus,
+        resolution: reporterMessage
+      }
     });
     console.log("📝 Report updated with message:", reporterMessage); // DEBUG LOG
 
@@ -1007,7 +1270,7 @@ export async function dismissReport(reportId: string) {
 
   try {
     await prisma.report.update({
-      where: { 
+      where: {
         id: reportId,
         userId: userId // Ensure user owns this report
       },
@@ -1081,39 +1344,39 @@ export async function markAsRead(notificationId: string) {
 }
 
 export async function markAllAsRead() {
-    const session = await auth();
-    if (!session?.user?.id) return;
-  
-    try {
-      await prisma.notification.updateMany({
-        where: {
-          userId: session.user.id,
-          isRead: false
-        },
-        data: {
-          isRead: true,
-        },
-      });
-      revalidatePath('/');
-    } catch (error) {
-      console.error('Failed to mark all as read:', error);
-    }
+  const session = await auth();
+  if (!session?.user?.id) return;
+
+  try {
+    await prisma.notification.updateMany({
+      where: {
+        userId: session.user.id,
+        isRead: false
+      },
+      data: {
+        isRead: true,
+      },
+    });
+    revalidatePath('/');
+  } catch (error) {
+    console.error('Failed to mark all as read:', error);
+  }
 }
 
 export async function archiveReport(reportId: string) {
-    const session = await auth();
-    if (session?.user?.role !== 'ADMIN') return { error: "Unauthorized" };
+  const session = await auth();
+  if (session?.user?.role !== 'ADMIN') return { error: "Unauthorized" };
 
-    try {
-        await prisma.report.update({
-            where: { id: reportId },
-            data: { archived: true } // Now it disappears from the table
-        });
-        revalidatePath('/admin/reports');
-        return { success: true };
-    } catch (error) {
-        return { error: "Failed to archive" };
-    }
+  try {
+    await prisma.report.update({
+      where: { id: reportId },
+      data: { archived: true } // Now it disappears from the table
+    });
+    revalidatePath('/admin/reports');
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to archive" };
+  }
 }
 
 export async function deleteNotification(notificationId: string) {
@@ -1127,7 +1390,7 @@ export async function deleteNotification(notificationId: string) {
         userId: session.user.id, // Security: User can only delete their own
       },
     });
-    revalidatePath('/'); 
+    revalidatePath('/');
   } catch (error) {
     console.error('Failed to delete notification:', error);
   }
@@ -1156,9 +1419,9 @@ export async function toggleCompanyFeatured(companyId: string, currentStatus: bo
       data: { featured: !currentStatus }
     });
 
-    revalidatePath('/admin/companies'); 
-    revalidatePath('/'); 
-    
+    revalidatePath('/admin/companies');
+    revalidatePath('/');
+
     return { success: true };
 
   } catch (error) {
@@ -1173,21 +1436,21 @@ export async function createSupportTicket(data: any) {
   try {
     await prisma.supportTicket.create({
       data: {
-        type: data.type, 
+        type: data.type,
         name: data.name,
         email: data.email,
         message: data.message,
         category: data.category || data.issueType || data.inquiryType,
-        
+
         reviewAuthor: data.reviewAuthor || null,
         reviewTitle: data.reviewTitle || null,
-        
+
         deviceInfo: data.deviceInfo || null,
         companyName: data.companyName || null,
         jobTitle: data.jobTitle || null,
       }
     });
-    
+
     return { success: true };
   } catch (error) {
     console.error("Support Ticket Error:", error);
@@ -1198,7 +1461,7 @@ export async function createSupportTicket(data: any) {
 // --- ADMIN: UPDATE TICKET STATUS ---
 export async function updateTicketStatus(ticketId: string, newStatus: string) {
   const session = await auth();
-  
+
   // 1. Security Check: Only Admins can close tickets
   if (session?.user?.role !== 'ADMIN') {
     return { error: "Unauthorized" };
@@ -1213,7 +1476,7 @@ export async function updateTicketStatus(ticketId: string, newStatus: string) {
 
     // 3. Refresh the Admin Page so the badge updates instantly
     revalidatePath('/admin/support');
-    
+
     return { success: true };
   } catch (error) {
     console.error("Update Ticket Error:", error);
@@ -1261,7 +1524,7 @@ export async function findCompanySlug(query: string) {
     if (company) {
       return { success: true, slug: company.slug };
     }
-    
+
     return { success: false };
 
   } catch (error) {
@@ -1280,38 +1543,38 @@ export async function submitBusinessClaim(prevState: any, formData: FormData) {
   const workEmail = formData.get('workEmail') as string;
   const jobTitle = formData.get('jobTitle') as string;
   const docFile = formData.get('verificationDoc') as File;
-  
+
   // Logic Flags
   const isNewCompany = formData.get('isNewCompany') === 'true';
   const companyId = formData.get('companyId') as string;
 
   // 3. IF NO USER IS LOGGED IN -> HANDLE "SHADOW USER" CREATION
   if (!userId) {
-     if (!workEmail) {
-        return { error: "Work email is required to create your account." };
-     }
+    if (!workEmail) {
+      return { error: "Work email is required to create your account." };
+    }
 
-     try {
-       const existingUser = await prisma.user.findUnique({ 
-         where: { email: workEmail } 
-       });
-       
-       if (existingUser) {
-          userId = existingUser.id;
-       } else {
-          const newUser = await prisma.user.create({
-             data: {
-                email: workEmail,
-                name: formData.get('businessName') as string || "Business Owner",
-                role: 'USER', 
-             }
-          });
-          userId = newUser.id;
-       }
-     } catch (error) {
-       console.error("User Creation Error:", error);
-       return { error: "Failed to create business account. Email might be invalid." };
-     }
+    try {
+      const existingUser = await prisma.user.findUnique({
+        where: { email: workEmail }
+      });
+
+      if (existingUser) {
+        userId = existingUser.id;
+      } else {
+        const newUser = await prisma.user.create({
+          data: {
+            email: workEmail,
+            name: formData.get('businessName') as string || "Business Owner",
+            role: 'USER',
+          }
+        });
+        userId = newUser.id;
+      }
+    } catch (error) {
+      console.error("User Creation Error:", error);
+      return { error: "Failed to create business account. Email might be invalid." };
+    }
   }
 
   // 4. Validate Required Fields
@@ -1323,61 +1586,60 @@ export async function submitBusinessClaim(prevState: any, formData: FormData) {
     // 5. Upload Verification Document
     const arrayBuffer = await docFile.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    
+
     const uploadResult = await new Promise<any>((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         { folder: "business_verifications", resource_type: "auto" },
         (error, result) => (error ? reject(error) : resolve(result))
       ).end(buffer);
     });
-    
     const docUrl = uploadResult.secure_url;
 
     // 6. Create the Claim Record
     if (isNewCompany) {
-       // --- REGISTER NEW COMPANY CLAIM ---
-       const businessName = formData.get('businessName') as string;
-       const website = formData.get('website') as string;
-       const categoryId = formData.get('categoryId') as string;
-       
-       // 👇 UPDATED: Get Country and State (Removed City)
-       const country = formData.get('country') as string;
-       const state = formData.get('state') as string;
+      // --- REGISTER NEW COMPANY CLAIM ---
+      const businessName = formData.get('businessName') as string;
+      const website = formData.get('website') as string;
+      const categoryId = formData.get('categoryId') as string;
 
-       if (!businessName || !categoryId) return { error: "Company name and category are required." };
+      // 👇 UPDATED: Get Country and State (Removed City)
+      const country = formData.get('country') as string;
+      const state = formData.get('state') as string;
 
-       await prisma.businessClaim.create({
-         data: {
-           userId, 
-           businessName,
-           website,
-           categoryId,
-           country,
-           state, 
-           workEmail,
-           jobTitle,
-           verificationDoc: docUrl,
-           status: "PENDING"
-         }
-       });
+      if (!businessName || !categoryId) return { error: "Company name and category are required." };
+
+      await prisma.businessClaim.create({
+        data: {
+          userId,
+          businessName,
+          website,
+          categoryId,
+          country,
+          state,
+          workEmail,
+          jobTitle,
+          verificationDoc: docUrl,
+          status: "PENDING"
+        }
+      });
 
     } else {
-       // --- CLAIM EXISTING COMPANY ---
-       if (!companyId) return { error: "Invalid company selected." };
-       
-       const existing = await prisma.company.findUnique({ where: { id: companyId }});
-       if (existing?.claimed) return { error: "This company is already claimed." };
+      // --- CLAIM EXISTING COMPANY ---
+      if (!companyId) return { error: "Invalid company selected." };
 
-       await prisma.businessClaim.create({
-         data: {
-           userId,
-           companyId,
-           workEmail,
-           jobTitle,
-           verificationDoc: docUrl,
-           status: "PENDING"
-         }
-       });
+      const existing = await prisma.company.findUnique({ where: { id: companyId } });
+      if (existing?.claimed) return { error: "This company is already claimed." };
+
+      await prisma.businessClaim.create({
+        data: {
+          userId,
+          companyId,
+          workEmail,
+          jobTitle,
+          verificationDoc: docUrl,
+          status: "PENDING"
+        }
+      });
     }
 
     return { success: true };
@@ -1400,10 +1662,10 @@ export async function setPasswordAction(prevState: any, formData: FormData) {
   try {
     // 1. Find the Token
     const invite = await prisma.inviteToken.findUnique({ where: { token } });
-    
+
     // 2. Validate Token
     if (!invite || invite.expires < new Date()) {
-       return { error: "Invalid or expired token." };
+      return { error: "Invalid or expired token." };
     }
 
     // 3. Hash the New Password
@@ -1440,37 +1702,37 @@ export async function approveBusinessClaim(claimId: string) {
 
     // 2. Create Company (If New)
     if (!targetCompanyId) {
-       if(!claim.businessName || !claim.categoryId) return { error: "Data missing" };
-       const slug = claim.businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-       
-       // Simple category fetch for MVP
-       const category = await prisma.category.findUnique({ 
-         where: { id: claim.categoryId }, 
-         include: { subCategories: true }
-       });
-       const subId = category?.subCategories[0]?.id;
-       
-       const newCompany = await prisma.company.create({
-          data: {
-             name: claim.businessName,
-             slug: `${slug}-${crypto.randomBytes(4).toString('hex')}`,
-             websiteUrl: claim.website,
-             categoryId: claim.categoryId,
-             subCategoryId: subId!, 
-             city: claim.city,
-             country: claim.country,
-             claimed: true,
-             claimedAt: new Date(),
-             companyType: "SERVICE",
-          }
-       });
-       targetCompanyId = newCompany.id;
+      if (!claim.businessName || !claim.categoryId) return { error: "Data missing" };
+      const slug = claim.businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+      // Simple category fetch for MVP
+      const category = await prisma.category.findUnique({
+        where: { id: claim.categoryId },
+        include: { subCategories: true }
+      });
+      const subId = category?.subCategories[0]?.id;
+
+      const newCompany = await prisma.company.create({
+        data: {
+          name: claim.businessName,
+          slug: `${slug}-${crypto.randomBytes(4).toString('hex')}`,
+          websiteUrl: claim.website,
+          categoryId: claim.categoryId,
+          subCategoryId: subId!,
+          city: claim.city,
+          country: claim.country,
+          claimed: true,
+          claimedAt: new Date(),
+          companyType: "SERVICE",
+        }
+      });
+      targetCompanyId = newCompany.id;
     } else {
-       // Mark existing as claimed
-       await prisma.company.update({ 
-         where: { id: targetCompanyId }, 
-         data: { claimed: true, claimedAt: new Date(), } 
-       });
+      // Mark existing as claimed
+      await prisma.company.update({
+        where: { id: targetCompanyId },
+        data: { claimed: true, claimedAt: new Date(), }
+      });
     }
 
     // 3. Generate Invite Token
@@ -1494,17 +1756,17 @@ export async function approveBusinessClaim(claimId: string) {
       }),
       prisma.businessClaim.update({
         where: { id: claimId },
-        data: { status: "APPROVED", companyId: targetCompanyId } 
+        data: { status: "APPROVED", companyId: targetCompanyId }
       })
     ]);
 
     // 5. SEND EMAIL
     const businessName = claim.businessName || "your business";
     console.log(`Sending approval email to: ${claim.workEmail}`);
-    
+
     // We don't await the result to block the UI, but we log errors if they happen
     const emailResult = await sendApprovalEmail(claim.workEmail, token, businessName);
-    
+
     if (!emailResult.success) {
       console.error("Warning: Database updated but email failed to send.");
     }
@@ -1555,21 +1817,21 @@ export async function rejectBusinessClaim(claimId: string) {
 // --- UPDATE COMPANY PROFILE ---
 export async function updateCompanyProfile(prevState: any, formData: FormData) {
   const session = await auth();
-  
+
   if (!session?.user?.companyId) {
     return { error: "Unauthorized. You must be logged in as a business." };
   }
-  
-  const companyId = session.user.companyId;
 
+  const companyId = session.user.companyId;
+  console.log(formData, "Received form data for company update"); // DEBUG LOG
   // 1. Extract Text Data
   const briefIntroduction = formData.get('description') as string;
   const websiteUrl = formData.get('websiteUrl') as string;
   const subCategoryId = formData.get('subCategoryId') as string;
   const categoryId = formData.get('categoryId') as string;
-  
+
   // Location
-  const address = formData.get('address') as string; 
+  const address = formData.get('address') as string;
   const city = formData.get('city') as string;
   const country = formData.get('country') as string;
   const state = formData.get('state') as string;
@@ -1579,23 +1841,26 @@ export async function updateCompanyProfile(prevState: any, formData: FormData) {
   const publicEmail = formData.get('publicEmail') as string;
   const phoneNumber = formData.get('phoneNumber') as string;
 
+  // Gallery image URLs submitted from the client
+  const otherImages = formData.getAll('otherImages').filter(Boolean).map((value) => value as string);
+
   // 2. Handle Logo Upload Only
   const logoFile = formData.get('logo') as File;
   let logoUrl = undefined;
 
   try {
     if (logoFile && logoFile.size > 0) {
-       const arrayBuffer = await logoFile.arrayBuffer();
-       const buffer = Buffer.from(arrayBuffer);
-       
-       const res = await new Promise<any>((resolve, reject) => {
-          cloudinary.uploader.upload_stream(
-             { folder: "company_logos", resource_type: "image" },
-             (error, result) => (error ? reject(error) : resolve(result))
-          ).end(buffer);
-       });
-       
-       logoUrl = res.secure_url;
+      const arrayBuffer = await logoFile.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      const res = await new Promise<any>((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          { folder: "company_logos", resource_type: "image" },
+          (error, result) => (error ? reject(error) : resolve(result))
+        ).end(buffer);
+      });
+
+      logoUrl = res.secure_url;
     }
 
     // 3. Update Database
@@ -1604,7 +1869,7 @@ export async function updateCompanyProfile(prevState: any, formData: FormData) {
       data: {
         briefIntroduction,
         websiteUrl,
-        address, 
+        address,
         city,
         country,
         state,
@@ -1613,14 +1878,15 @@ export async function updateCompanyProfile(prevState: any, formData: FormData) {
         categoryId,
 
         contact: {
-           set: {
-              email: publicEmail,
-              phone: phoneNumber
-           }
+          set: {
+            email: publicEmail,
+            phone: phoneNumber
+          }
         },
 
         // Only update logo if a new one was uploaded
         ...(logoUrl && { logoImage: logoUrl }),
+        ...(otherImages.length > 0 ? { otherImages } : {}),
       }
     });
 
@@ -1653,11 +1919,11 @@ export async function replyToReview(prevState: any, formData: FormData) {
     // We update this query to grab the Customer's ID and Company Name
     const review = await prisma.review.findUnique({
       where: { id: reviewId },
-      select: { 
+      select: {
         companyId: true,
         userId: true, // <--- Needed to send notification
         company: {    // <--- Needed for the notification title
-            select: { name: true, slug: true }
+          select: { name: true, slug: true }
         }
       }
     });
@@ -1678,20 +1944,20 @@ export async function replyToReview(prevState: any, formData: FormData) {
 
     // 4. --- NEW: SEND NOTIFICATION TO USER ---
     if (review.userId) {
-        await prisma.notification.create({
-            data: {
-                userId: review.userId,
-                title: `New Reply from ${review.company.name}`,
-                message: `${review.company.name} has replied to your review: "${replyText.substring(0, 50)}${replyText.length > 50 ? '...' : ''}"`,
-                isRead: false,
-                // If you add a 'link' field to your schema later, you can link to: `/company/${review.company.slug}`
-            }
-        });
+      await prisma.notification.create({
+        data: {
+          userId: review.userId,
+          title: `New Reply from ${review.company.name}`,
+          message: `${review.company.name} has replied to your review: "${replyText.substring(0, 50)}${replyText.length > 50 ? '...' : ''}"`,
+          isRead: false,
+          // If you add a 'link' field to your schema later, you can link to: `/company/${review.company.slug}`
+        }
+      });
     }
 
     // 5. Revalidate
     revalidatePath('/business/dashboard/reviews');
-    
+
     // Also revalidate the specific company page so the public sees it immediately
     revalidatePath(`/company/${review.company.slug}`);
 
@@ -1735,7 +2001,7 @@ export async function deleteReviewReply(reviewId: string) {
     revalidatePath('/business/dashboard/reviews');
     // Also revalidate the public page if you can derive the slug, 
     // but for simplicity dashboard refresh is priority.
-    
+
     return { success: true };
 
   } catch (error) {
@@ -1807,15 +2073,15 @@ export async function sendDomainVerification(formData: FormData) {
   if (!session?.user?.companyId) return { error: "Unauthorized" };
 
   const email = formData.get("companyEmail") as string;
-  
+
   // Basic validation
   if (!email || !email.includes("@")) return { error: "Invalid email address" };
-  
+
   // Optional: Block generic domains
   const forbiddenDomains = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com"];
   const emailDomain = email.split("@")[1];
   if (forbiddenDomains.includes(emailDomain)) {
-      return { error: "Please use a business domain (e.g. name@company.com)" };
+    return { error: "Please use a business domain (e.g. name@company.com)" };
   }
 
   const token = uuidv4();
@@ -1863,8 +2129,8 @@ export async function verifyDomainToken(token: string) {
 
 // --- TOGGLE SPONSORED STATUS ---
 export async function toggleSponsoredStatus(
-  companyId: string, 
-  status: boolean, 
+  companyId: string,
+  status: boolean,
   scope: "GLOBAL" | "LOCAL" | null
 ) {
   try {
@@ -1873,14 +2139,14 @@ export async function toggleSponsoredStatus(
       data: {
         isSponsored: status,
         // If turning OFF, force scope to null. If ON, use the provided scope.
-        sponsoredScope: status ? scope : null 
+        sponsoredScope: status ? scope : null
       }
     });
 
     // Refresh pages where this change matters
-    revalidatePath("/categories"); 
-    revalidatePath("/admin/companies"); 
-    
+    revalidatePath("/categories");
+    revalidatePath("/admin/companies");
+
     return { success: true };
   } catch (error) {
     console.error("Sponsored Update Error:", error);
@@ -1900,16 +2166,16 @@ export async function toggleCompanyFreeze(companyId: string, shouldFreeze: boole
     // 2. Update the Company in the Database
     await prisma.company.update({
       where: { id: companyId },
-      data: { 
-        isFrozen: shouldFreeze 
+      data: {
+        isFrozen: shouldFreeze
       }
     });
 
     // 3. Revalidate the Admin Page so the table updates immediately
-    revalidatePath("/admin/companies"); 
-    
+    revalidatePath("/admin/companies");
+
     // Optional: Revalidate the specific company's public/private pages if needed
-     revalidatePath(`/business/dashboard`); 
+    revalidatePath(`/business/dashboard`);
 
     return { success: true };
   } catch (error) {
