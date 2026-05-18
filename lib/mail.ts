@@ -235,6 +235,7 @@ export const sendProfessionalCampaign = async (
     subject: subject,
     html: emailHtml
   });
+
 };
 
 

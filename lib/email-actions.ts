@@ -145,9 +145,10 @@ export async function createCampaign(prevState: any, formData: FormData) {
       if (!limitCheck.allowed) {
           return { error: limitCheck.error };
       }
-      
+      let res:any;
       for (const recipient of recipientList) {
-        await sendProfessionalCampaign(
+        console.log(recipient,"recipient")
+       res =  await sendProfessionalCampaign(
            recipient,
            company?.name || "Business",
            senderEmail,
@@ -160,7 +161,7 @@ export async function createCampaign(prevState: any, formData: FormData) {
         );
         sentCount++;
       }
-
+      console.log(res,"email response")
       status = "SENT";
       sentAt = new Date();
   }

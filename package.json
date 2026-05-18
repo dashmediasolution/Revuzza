@@ -51,6 +51,7 @@
     "framer-motion": "^12.34.0",
     "groq-sdk": "^0.37.0",
     "html-react-parser": "^5.2.11",
+    "logger": "^0.0.1",
     "lucide-react": "^0.554.0",
     "motion": "^12.34.0",
     "next": "^16.2.4",
@@ -69,6 +70,7 @@
     "tailwind-merge": "^3.4.0",
     "use-debounce": "^10.0.6",
     "use-places-autocomplete": "^4.0.1",
+    "winston": "^3.19.0",
     "zod": "^4.1.13"
   },
   "devDependencies": {

@@ -40,7 +40,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const { categorySlug } = await params;
   const resolvedSearchParams = await searchParams;
   const userQuery = resolvedSearchParams.q;
-
+  console.log(categorySlug,"categorySlug12")
   console.log("Category Page - Search Params:", userQuery, resolvedSearchParams);
 
   const locationFilter = resolvedSearchParams.loc || resolvedSearchParams.zip || resolvedSearchParams.region ;

@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Settings, LogOut, LayoutDashboard } from 'lucide-react';
+import { useSession } from "next-auth/react"
 
 interface UserAccountNavProps {
   user: {
@@ -26,6 +27,17 @@ interface UserAccountNavProps {
 }
 
 export function UserAccountNav({ user, open, onOpenChange }: UserAccountNavProps) {
+  const { data: session } = useSession()
+  
+   const role = session?.user?.role
+  
+   const roleRouteMap: Record<string, string> = {
+     BUSINESS: "/business",
+     ADMIN: "/admin",
+     DATA_ENTRY: "/data-entry",
+     BLOG_ENTRY: "/blog-entry",
+   }
+   const dashboardPath = roleRouteMap[role as keyof typeof roleRouteMap] || "/"
   return (
     // --- UPDATED: Pass open state to Root ---
     <DropdownMenu open={open} onOpenChange={onOpenChange}>
@@ -41,7 +53,7 @@ export function UserAccountNav({ user, open, onOpenChange }: UserAccountNavProps
       <DropdownMenuContent align="end" className="w-56 p-2">
         
         <DropdownMenuItem asChild className="cursor-pointer">
-          <Link href="/dashboard" className="flex items-center hover:text-[#0ABED6]">
+          <Link  href={`${dashboardPath}/dashboard`} className="flex items-center hover:text-[#0ABED6]">
             <LayoutDashboard className="mr-2 h-4 w-4" />
             My Dashboard
           </Link>
@@ -50,7 +62,7 @@ export function UserAccountNav({ user, open, onOpenChange }: UserAccountNavProps
         <DropdownMenuSeparator />
 
         <DropdownMenuItem asChild className="cursor-pointer">
-          <Link href="/dashboard/settings" className="flex items-center hover:text-[#0ABED6]">
+          <Link   href={`${dashboardPath}/dashboard/settings`} className="flex items-center hover:text-[#0ABED6]">
             <Settings className="mr-2 h-4 w-4" />
             Settings
           </Link>

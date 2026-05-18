@@ -15,6 +15,7 @@ import { NotificationBell } from '@/components/layout/notification-bell';
 // ✅ Import Translation Components
 import { LanguageSelector } from "@/components/shared/language-selector";
 import { TranslatableText } from "@/components/shared/translatable-text";
+import { useSession } from "next-auth/react"
 
 type NavLink = {
   label: string;
@@ -31,6 +32,17 @@ interface HeaderProps {
 }
 
 export function Header({ user, variant = 'user' }: HeaderProps) {
+  const { data: session } = useSession()
+
+  const role = session?.user?.role
+
+  const roleRouteMap: Record<string, string> = {
+    BUSINESS: "/business",
+    ADMIN: "/admin",
+    DATA_ENTRY: "/data-entry",
+    BLOG_ENTRY: "/blog-entry",
+  }
+
   const [open, setOpen] = React.useState(false);
   const [activeDropdown, setActiveDropdown] = React.useState<string | null>(null);
   const scrolled = useScroll(10);
@@ -50,6 +62,7 @@ export function Header({ user, variant = 'user' }: HeaderProps) {
 
   const logoHref = isBusiness ? '/business' : '/';
 
+  const dashboardPath = roleRouteMap[role as keyof typeof roleRouteMap] || "/"
   const Logo = () => (
     <Link
       href={logoHref}
@@ -209,15 +222,15 @@ export function Header({ user, variant = 'user' }: HeaderProps) {
             {user ? (
               <div className="flex flex-col gap-3">
                 <Link
-                  href="/dashboard"
+                  href={`${dashboardPath}/dashboard`}
                   className="flex items-center gap-2 text-gray-700 font-medium p-2 hover:bg-gray-50 rounded-md"
                   onClick={() => setOpen(false)}
                 >
                   <LayoutDashboard className="h-5 w-5 text-[#0ABED6]" />
-                  <TranslatableText text="My Dashboard" />
+                  My Dashboard
                 </Link>
                 <Link
-                  href="/dashboard/settings"
+                    href={`${dashboardPath}/dashboard/settings`}
                   className="flex items-center gap-2 text-gray-700 font-medium p-2 hover:bg-gray-50 rounded-md"
                   onClick={() => setOpen(false)}
                 >
