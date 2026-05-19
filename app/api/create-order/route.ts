@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
+import { logger } from "../../../logger";
 
 export async function POST(req: Request) {
   try {
     const { planType } = await req.json();
 
-    console.log("Received plan:", planType);
+    await logger.info("Received plan", planType);
 
     // planType is full object
     const plan = planType;
@@ -28,14 +29,14 @@ export async function POST(req: Request) {
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
     });
-    console.log(order,"myorder")
+    await logger.info("Created Razorpay order", order);
     return NextResponse.json({
       id: order.id,
       amount: order.amount,
     });
 
   } catch (error) {
-    console.error(error);
+    await logger.error("Failed to create order", error);
     return NextResponse.json(
       { error: "Failed to create order" },
       { status: 500 }

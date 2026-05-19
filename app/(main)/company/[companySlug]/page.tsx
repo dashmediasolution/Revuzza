@@ -38,7 +38,10 @@ export async function generateMetadata({ params }: PageProps) {
   const { companySlug } = await params;
   const company = await getCompanyBySlug(companySlug);
   if (!company) return { title: 'Company Not Found' };
-  return { title: `${company.name} Reviews` };
+  return { 
+   title: `${company.name} Reviews & Ratings`,
+   description: `Read real customer reviews about ${company.name}.`
+  };
 }
 
 export default async function CompanyProfilePage({ params, searchParams }: PageProps) {

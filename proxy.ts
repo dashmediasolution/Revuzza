@@ -2,7 +2,7 @@ import { auth } from "@/auth"
 import { NextResponse } from "next/server"
 
 // ✅ Define roles properly
-type Role = "BUSINESS" | "DATA_ENTRY" | "BLOG_ENTRY" | "ADMIN"
+type Role = "USER" | "BUSINESS" | "DATA_ENTRY" | "BLOG_ENTRY" | "ADMIN" 
 
 export default auth((req) => {
   const pathname = req.nextUrl.pathname
@@ -12,6 +12,7 @@ export default auth((req) => {
 
   // ✅ Role → default route map
   const roleRedirectMap: Record<Role, string> = {
+    USER: "/",
     BUSINESS: "/business",
     DATA_ENTRY: "/data-entry",
     BLOG_ENTRY: "/blog-entry",
@@ -19,11 +20,11 @@ export default auth((req) => {
   }
 
   // ✅ Redirect "/" based on role
-  if (pathname === "/" && role) {
-    return NextResponse.redirect(
-      new URL(roleRedirectMap[role], req.nextUrl)
-    )
-  }
+  // if (pathname === "/" && role) {
+  //   return NextResponse.redirect(
+  //     new URL(roleRedirectMap[role], req.nextUrl)
+  //   )
+  // }
 
   // ✅ BUSINESS restriction
   if (role === "BUSINESS") {

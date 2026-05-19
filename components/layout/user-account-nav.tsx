@@ -3,7 +3,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { signOut } from 'next-auth/react'; 
+import { signOut } from 'next-auth/react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,16 +28,23 @@ interface UserAccountNavProps {
 
 export function UserAccountNav({ user, open, onOpenChange }: UserAccountNavProps) {
   const { data: session } = useSession()
-  
-   const role = session?.user?.role
-  
-   const roleRouteMap: Record<string, string> = {
-     BUSINESS: "/business",
-     ADMIN: "/admin",
-     DATA_ENTRY: "/data-entry",
-     BLOG_ENTRY: "/blog-entry",
-   }
-   const dashboardPath = roleRouteMap[role as keyof typeof roleRouteMap] || "/"
+
+  const role = session?.user?.role
+
+  const roleRouteMap: Record<string, string> = {
+    USER: "",
+    BUSINESS: "business",
+    ADMIN: "admin",
+    DATA_ENTRY: "data-entry",
+    BLOG_ENTRY: "blog-entry",
+  }
+
+  const getDashboardPrefix = (role?: string) => {
+    const prefix = role ? roleRouteMap[role as keyof typeof roleRouteMap] : "";
+    return prefix ? `/${prefix}` : "";
+  };
+
+  const dashboardPath = `${getDashboardPrefix(role)}`
   return (
     // --- UPDATED: Pass open state to Root ---
     <DropdownMenu open={open} onOpenChange={onOpenChange}>
@@ -49,11 +56,18 @@ export function UserAccountNav({ user, open, onOpenChange }: UserAccountNavProps
           </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
-      
+
       <DropdownMenuContent align="end" className="w-56 p-2">
-        
+
         <DropdownMenuItem asChild className="cursor-pointer">
-          <Link  href={`${dashboardPath}/dashboard`} className="flex items-center hover:text-[#0ABED6]">
+          <Link
+            href={
+              ["/blog-entry", "/data-entry"].includes(dashboardPath)
+                ? dashboardPath
+                : `${dashboardPath}/dashboard`
+            }
+            className="flex items-center hover:text-[#0ABED6]"
+          >
             <LayoutDashboard className="mr-2 h-4 w-4" />
             My Dashboard
           </Link>
@@ -62,15 +76,22 @@ export function UserAccountNav({ user, open, onOpenChange }: UserAccountNavProps
         <DropdownMenuSeparator />
 
         <DropdownMenuItem asChild className="cursor-pointer">
-          <Link   href={`${dashboardPath}/dashboard/settings`} className="flex items-center hover:text-[#0ABED6]">
-            <Settings className="mr-2 h-4 w-4" />
+          <Link
+            href={
+              ["/blog-entry", "/data-entry"].includes(dashboardPath)
+                ? dashboardPath
+                : `${dashboardPath}/settings`
+            }
+            className="flex items-center hover:text-[#0ABED6]"
+          >
+            <LayoutDashboard className="mr-2 h-4 w-4" />
             Settings
           </Link>
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem 
+        <DropdownMenuItem
           className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
           onClick={() => signOut({ callbackUrl: '/' })}
         >

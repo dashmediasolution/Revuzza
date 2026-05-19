@@ -1,24 +1,24 @@
 "use client";
 
 import Link from 'next/link';
-import { 
-  Facebook, 
-  Twitter, 
-  Instagram, 
-  Linkedin, 
-  Youtube, 
+import {
+  Facebook,
+  Twitter,
+  Instagram,
+  Linkedin,
+  Youtube,
 } from 'lucide-react';
-import { LanguageSelector } from "@/components/shared/language-selector"; 
-import { TranslatableText } from "@/components/shared/translatable-text"; 
+import { LanguageSelector } from "@/components/shared/language-selector";
+import { TranslatableText } from "@/components/shared/translatable-text";
 
 export function Footer() {
   return (
     <footer className="bg-[#0892A5] text-white">
       <div className="container mx-auto max-w-7xl px-6 md:px-12">
-        
+
         {/* --- ROW 1: Link Columns --- */}
         <div className="py-16 border-b border-white/20 grid grid-cols-2 md:grid-cols-4 gap-10">
-          
+
           {/* Column 1: About */}
           <div className="space-y-6">
             <h4 className="font-bold text-sm uppercase tracking-widest text-blue-100">
@@ -36,7 +36,7 @@ export function Footer() {
           {/* Column 2: Community */}
           <div className="space-y-6">
             <h4 className="font-bold text-sm uppercase tracking-widest text-blue-100">
-               <TranslatableText text="Community" />
+              <TranslatableText text="Community" />
             </h4>
             <ul className="space-y-3 text-sm font-medium text-white/90">
               <li><Link href="/help" className="hover:text-white hover:underline transition-colors"><TranslatableText text="Help in reviews" /></Link></li>
@@ -48,7 +48,7 @@ export function Footer() {
           {/* Column 3: Businesses */}
           <div className="space-y-6">
             <h4 className="font-bold text-sm uppercase tracking-widest text-blue-100">
-               <TranslatableText text="Businesses" />
+              <TranslatableText text="Businesses" />
             </h4>
             <ul className="space-y-3 text-sm font-medium text-white/90">
               <li><Link href="/business" className="hover:text-white hover:underline transition-colors"><TranslatableText text="Help Business" /></Link></li>
@@ -61,48 +61,52 @@ export function Footer() {
           {/* Column 4: Follow Us (Vertical Stack) */}
           <div className="space-y-6">
             <h4 className="font-bold text-sm uppercase tracking-widest text-blue-100">
-               <TranslatableText text="Follow us on" />
+              <TranslatableText text="Follow us on" />
             </h4>
             <div className="flex flex-col gap-4">
-              <a href="#" className="flex items-center gap-3 text-white/80 hover:text-white transition-colors group">
+              <a href="https://www.facebook.com/profile.php?id=61582394885292"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 text-white/80 hover:text-white transition-colors group">
                 <Facebook className="h-5 w-5 transition-transform group-hover:scale-110" />
                 <span className="text-sm font-medium">Facebook</span>
               </a>
-              <a href="#" className="flex items-center gap-3 text-white/80 hover:text-white transition-colors group">
-                <Twitter className="h-5 w-5 transition-transform group-hover:scale-110" />
-                <span className="text-sm font-medium">Twitter</span>
-              </a>
-              <a href="#" className="flex items-center gap-3 text-white/80 hover:text-white transition-colors group">
+         
+              <a href="https://www.instagram.com/dashmediasolutions?igsh=MnV1c3BnbG5qcnh4"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 text-white/80 hover:text-white transition-colors group">
                 <Instagram className="h-5 w-5 transition-transform group-hover:scale-110" />
                 <span className="text-sm font-medium">Instagram</span>
               </a>
-              <a href="#" className="flex items-center gap-3 text-white/80 hover:text-white transition-colors group">
+              <a
+                href="https://www.linkedin.com/company/dashmediasolutions/posts/?feedView=all"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 text-white/80 hover:text-white transition-colors group"
+              >
                 <Linkedin className="h-5 w-5 transition-transform group-hover:scale-110" />
                 <span className="text-sm font-medium">LinkedIn</span>
               </a>
-              <a href="#" className="flex items-center gap-3 text-white/80 hover:text-white transition-colors group">
-                <Youtube className="h-5 w-5 transition-transform group-hover:scale-110" />
-                <span className="text-sm font-medium">YouTube</span>
-              </a>
+          
             </div>
           </div>
         </div>
 
         {/* --- ROW 2: Language Selector --- */}
-        <div className="py-8 border-b border-white/20 flex flex-col md:flex-row justify-between items-center gap-6">
+        {/* <div className="py-8 border-b border-white/20 flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="text-sm text-blue-100 max-w-md text-center md:text-left leading-relaxed">
                 <TranslatableText text="Choose your preferred language to explore Help in a way that feels like home." />
             </div>
             
-            {/* ✅ CLEANER LAYOUT: No extra wrapper needed now */}
             <div>
                 <LanguageSelector variant="footer" />
             </div>
-        </div>
+        </div> */}
 
         {/* --- ROW 3: Bottom Links & Copyright --- */}
         <div className="py-8 flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-white/80">
-          
+
           <div className="flex flex-wrap justify-center md:justify-start gap-6 font-medium">
             <Link href="/legal" className="hover:text-white hover:underline transition-colors"><TranslatableText text="Legal" /></Link>
             <Link href="/privacy" className="hover:text-white hover:underline transition-colors"><TranslatableText text="Privacy Policy" /></Link>

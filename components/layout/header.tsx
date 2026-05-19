@@ -37,11 +37,17 @@ export function Header({ user, variant = 'user' }: HeaderProps) {
   const role = session?.user?.role
 
   const roleRouteMap: Record<string, string> = {
-    BUSINESS: "/business",
-    ADMIN: "/admin",
-    DATA_ENTRY: "/data-entry",
-    BLOG_ENTRY: "/blog-entry",
+    USER: "",
+    BUSINESS: "business",
+    ADMIN: "admin",
+    DATA_ENTRY: "data-entry",
+    BLOG_ENTRY: "blog-entry",
   }
+
+  const getDashboardPrefix = (role?: string) => {
+    const prefix = role ? roleRouteMap[role as keyof typeof roleRouteMap] : "";
+    return prefix ? `/${prefix}` : "";
+  };
 
   const [open, setOpen] = React.useState(false);
   const [activeDropdown, setActiveDropdown] = React.useState<string | null>(null);
@@ -62,7 +68,8 @@ export function Header({ user, variant = 'user' }: HeaderProps) {
 
   const logoHref = isBusiness ? '/business' : '/';
 
-  const dashboardPath = roleRouteMap[role as keyof typeof roleRouteMap] || "/"
+  const dashboardPath = `${getDashboardPrefix(role)}`;
+
   const Logo = () => (
     <Link
       href={logoHref}
@@ -222,20 +229,26 @@ export function Header({ user, variant = 'user' }: HeaderProps) {
             {user ? (
               <div className="flex flex-col gap-3">
                 <Link
-                  href={`${dashboardPath}/dashboard`}
-                  className="flex items-center gap-2 text-gray-700 font-medium p-2 hover:bg-gray-50 rounded-md"
-                  onClick={() => setOpen(false)}
-                >
-                  <LayoutDashboard className="h-5 w-5 text-[#0ABED6]" />
+                  href={
+                    ["/blog-entry", "/data-entry"].includes(dashboardPath)
+                      ? dashboardPath
+                      : `${dashboardPath}/dashboard`
+                  }
+                  className="flex items-center hover:text-[#0ABED6]"
+                > 
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
                   My Dashboard
                 </Link>
                 <Link
-                    href={`${dashboardPath}/dashboard/settings`}
-                  className="flex items-center gap-2 text-gray-700 font-medium p-2 hover:bg-gray-50 rounded-md"
-                  onClick={() => setOpen(false)}
+                  href={
+                    ["/blog-entry", "/data-entry"].includes(dashboardPath)
+                      ? dashboardPath
+                      : `${dashboardPath}/settings`
+                  }
+                  className="flex items-center hover:text-[#0ABED6]"
                 >
-                  <Settings className="h-5 w-5 text-gray-500" />
-                  <TranslatableText text="Settings" />
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Settings
                 </Link>
                 <button
                   onClick={() => { signOut({ callbackUrl: '/' }); setOpen(false); }}

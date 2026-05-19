@@ -8,11 +8,13 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { PrismaAdapter } from '@auth/prisma-adapter';
+import { logger } from './logger';
 
 
 async function getUser(email: string) {
   try {
     const user = await prisma.user.findUnique({ where: { email } });
+    logger.info('Fetched user:', user);
     return user;
   } catch (error) {
     console.error('Failed to fetch user:', error);
