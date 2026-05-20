@@ -30,7 +30,7 @@ export async function fetchAzureTranslation(text: string, targetLang: string): P
     // Azure structure: [{ translations: [{ text: "Hola", ... }] }]
     return response.data[0]?.translations[0]?.text || null;
   } catch (error) {
-    console.error("❌ Azure Translation API Error:", error);
+    console.error("❌ Azure Translation API Error:", error); 
     return null;
   }
 }

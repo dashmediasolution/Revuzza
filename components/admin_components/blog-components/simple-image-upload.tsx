@@ -24,7 +24,7 @@ export default function SimpleImageUpload({ onChange, onRemove, value }: SimpleI
     formData.append("file", file);
     
     // ⚠️ REPLACE WITH YOUR UNSIGNED PRESET NAME
-    formData.append("upload_preset", "blog_upload");
+    formData.append("upload_preset", "helpweb");
     
     try {
       // 1. DEBUG: Check if the Env Variable is actually being read
