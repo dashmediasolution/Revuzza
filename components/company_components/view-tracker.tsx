@@ -16,7 +16,7 @@ export function ViewTracker({ reviewIds }: { reviewIds: string[] }) {
       // 4. Mark as run BEFORE calling the action
       hasRun.current = true;
       
-      console.log("👀 ViewTracker firing (Once)");
+
       incrementReviewReads(reviewIds);
     }
   }, [reviewIds]);

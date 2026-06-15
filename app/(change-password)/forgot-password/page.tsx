@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
       form.reset();
     } catch (error) {
       setServerMessage("Server error, please try again");
-      console.log(error)
+
     } finally {
       setLoading(false);
     }

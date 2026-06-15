@@ -666,13 +666,13 @@ export async function getCompanyBySlug(
 }
 
 export async function getUserReviews(userId: string) {
-  console.log("🔍 Fetching reviews for User ID:", userId);
+
   const reviews = await prisma.review.findMany({
     where: { userId: userId },
     include: { company: true },
     orderBy: { dateOfExperience: "desc" },
   });
-  console.log(`✅ Found ${reviews.length} reviews for this user.`);
+
   return reviews;
 }
 

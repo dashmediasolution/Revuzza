@@ -11,7 +11,7 @@ export const TestimonialsColumn = (props: {
   duration?: number;
 }) => {
   return (
-    <div className={cn("relative h-[600px] overflow-hidden", props.className)}>
+    <div className={cn("relative h-150 overflow-hidden", props.className)}>
       <motion.div
         animate={{
           translateY: "-50%",

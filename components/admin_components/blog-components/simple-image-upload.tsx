@@ -29,8 +29,8 @@ export default function SimpleImageUpload({ onChange, onRemove, value }: SimpleI
     try {
       // 1. DEBUG: Check if the Env Variable is actually being read
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-      console.log("Debug: Using Cloud Name:", cloudName); // Check your browser console for this!
 
+      
       if (!cloudName) {
         throw new Error("Cloud Name is missing. Check your .env file and restart the server.");
       }

@@ -52,7 +52,7 @@ export default function ModernAdminSettingsForm({ userData, brandColor }: Modern
         setFieldErrors({});
 
         const result = await updateAdminDetails(null, formDataObj);
-        console.log("Update Result:", result);
+
         setIsLoading(false);
         if (result.success && result.data) {
             setFormData({

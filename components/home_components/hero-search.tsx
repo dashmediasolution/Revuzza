@@ -82,7 +82,7 @@ export async function HeroSearch({ reviews }: HeroSearchProps) {
             </div>
 
             {/* --- Right Column: Animated Columns (Now with 5 Reviews) --- */}
-            <div className="relative h-[650px] hidden lg:flex gap-6 items-start overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)]">
+            <div className="relative h-162.5 hidden lg:flex gap-6 items-start overflow-hidden mask-[linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)]">
                 
                 {/* Column 1 (3 Reviews) - Slower Speed */}
                 <TestimonialsColumn 

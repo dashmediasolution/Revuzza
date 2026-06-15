@@ -179,24 +179,24 @@ const loadRazorpay = () => {
 };
 
 const payementHandler = async (plan: any, userSession: any) => {
-  console.log("1. Function called", plan.name);
+
   
 if (!userSession || !userSession.user.id || userSession.user.role !== "BUSINESS") {
-  console.log("2. Redirecting - not BUSINESS user");
-redirect('/business/login');
+
+  redirect('/business/login');
 }
 else {
-  console.log("3. User validated, loading Razorpay");
+
   try {
     const isLoaded = await loadRazorpay();
-    console.log("4. Razorpay loaded:", isLoaded);
+
     if (!isLoaded) {
       alert("Razorpay SDK failed to load");
       return;
     }
 
     // 1️⃣ Create order
-    console.log("5. Creating order...");
+
     const res = await fetch("/api/create-order", {
       method: "POST",
       headers: {
@@ -206,11 +206,11 @@ else {
     });
 
     const data = await res.json();
-    console.log("6. Order created:", data);
+
     if (!data.id) throw new Error("Order creation failed");
 
     // 2️⃣ Razorpay options
-    console.log("7. Building Razorpay options...");
+
     const options = {
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
       amount: data.amount,
@@ -234,7 +234,7 @@ else {
           });
 
           const verifyData = await verifyRes.json();
-          console.log("Verification response:", verifyData);
+
           if (!verifyData.success) {
             alert(verifyData?.error || "❌ Verification failed");
             return;
@@ -258,8 +258,8 @@ else {
     };
 
     const rzp = new (window as any).Razorpay(options);
-    console.log("8. Razorpay instance created:", rzp);
-    console.log("Razorpay options:", options);
+
+    
     rzp.on("payment.failed", function () {
       alert("❌ Payment failed");
     });

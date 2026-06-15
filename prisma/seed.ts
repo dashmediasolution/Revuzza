@@ -185,7 +185,6 @@ async function main() {
       role: "ADMIN" // <--- Important: This requires the Role enum in schema
     }
   });
-  console.log("🛡️ Admin Created: admin@help.com / admin123");
 
   
   for (let i = 0; i < userNames.length; i++) {
@@ -203,7 +202,6 @@ async function main() {
 
   // 3. CREATE CATEGORIES & SUBCATEGORIES
   const subCatMap = new Map(); 
-  console.log('🗂️ Creating Taxonomy...');
   
   for (const [catName, subNames] of Object.entries(taxonomy)) {
     const category = await prisma.category.create({
@@ -333,3 +331,61 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+
+
+
+
+
+
+// async function seedAdmin() {
+//   const adminEmail = process.env.ADMIN_EMAIL;
+
+//   if (!adminEmail) {
+//     throw new Error("ADMIN_EMAIL is missing");
+//   }
+
+//   const existingAdmin = await prisma.user.findUnique({
+//     where: {
+//       email: adminEmail,
+//     },
+//   });
+
+//   if (existingAdmin) {
+//     console.log("Admin already exists");
+//     return;
+//   }
+
+//   const hashedPassword = await bcrypt.hash(
+//     process.env.ADMIN_PASSWORD!,
+//     12
+//   );
+
+//   await prisma.user.create({
+//     data: {
+//       name: "System Admin",
+//       email: adminEmail,
+//       password: hashedPassword,
+//       role: "ADMIN",
+//       emailVerified: new Date(),
+//     },
+//   });
+
+//   console.log("Admin created");
+// }
+
+// async function main() {
+//   console.log("Starting seed...");
+
+//   await seedAdmin();
+
+//   console.log("Seed completed");
+// }
+
+// main()
+//   .catch((error) => {
+//     console.error(error);
+//     process.exit(1);
+//   })
+//   .finally(async () => {
+//     await prisma.$disconnect();
+//   });

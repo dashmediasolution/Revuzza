@@ -179,11 +179,8 @@ export async function smartSearch(
 ) {
   if (!userQuery) return [];
 
-  console.log(
-    `🔍 Analyzing: "${userQuery}" | Loc: "${
-      locationFilter || "Global"
-    }" | Region: "${userRegion}"`
-  );
+  
+  
 
   // Fetch dynamic lists
   const { categoriesList } = await getTaxonomyForAI();

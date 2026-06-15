@@ -45,6 +45,7 @@ export function UserAccountNav({ user, open, onOpenChange }: UserAccountNavProps
   };
 
   const dashboardPath = `${getDashboardPrefix(role)}`
+
   return (
     // --- UPDATED: Pass open state to Root ---
     <DropdownMenu open={open} onOpenChange={onOpenChange}>
@@ -62,7 +63,7 @@ export function UserAccountNav({ user, open, onOpenChange }: UserAccountNavProps
         <DropdownMenuItem asChild className="cursor-pointer">
           <Link
             href={
-              ["/blog-entry", "/data-entry"].includes(dashboardPath)
+              ["/blog-entry", "/data-entry", "/admin"].includes(dashboardPath)
                 ? dashboardPath
                 : `${dashboardPath}/dashboard`
             }
@@ -72,25 +73,26 @@ export function UserAccountNav({ user, open, onOpenChange }: UserAccountNavProps
             My Dashboard
           </Link>
         </DropdownMenuItem>
+        {role === "USER" &&
+          <>  <DropdownMenuSeparator />
 
+            <DropdownMenuItem asChild className="cursor-pointer">
+              <Link
+                href={
+                  ["/blog-entry", "/data-entry"].includes(dashboardPath)
+                    ? dashboardPath
+                    : `${dashboardPath}/dashboard/settings`
+                }
+                className="flex items-center hover:text-[#0ABED6]"
+              >
+                <LayoutDashboard className="mr-2 h-4 w-4" />
+                Settings
+              </Link>
+            </DropdownMenuItem>
+          </>
+        }
         <DropdownMenuSeparator />
-
-        <DropdownMenuItem asChild className="cursor-pointer">
-          <Link
-            href={
-              ["/blog-entry", "/data-entry"].includes(dashboardPath)
-                ? dashboardPath
-                : `${dashboardPath}/settings`
-            }
-            className="flex items-center hover:text-[#0ABED6]"
-          >
-            <LayoutDashboard className="mr-2 h-4 w-4" />
-            Settings
-          </Link>
-        </DropdownMenuItem>
-
-        <DropdownMenuSeparator />
-
+        
         <DropdownMenuItem
           className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
           onClick={() => signOut({ callbackUrl: '/' })}

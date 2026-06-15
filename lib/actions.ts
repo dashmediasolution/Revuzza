@@ -122,7 +122,9 @@ export async function updateAdminDetails(prevState: any, formData: FormData) {
     if (!user) {
       return { error: "User not found." };
     }
-
+    if (!user.password) {
+      throw new Error("User does not have a password");
+    }
     const isValidPassword = await bcrypt.compare(
       currentPassword,
       user.password
@@ -192,7 +194,6 @@ export async function forgotPassword(email: string) {
 
   // 1. Check user (pseudo DB)
   const user = await prisma.user.findUnique({ where: { email } });
-  console.log('Database query completed. User:', user);
   if (!user) {
     return { error: "User not found" };
   }
@@ -287,7 +288,7 @@ export async function authenticate(prevState: any, formData: FormData) {
     const isUserPortal = redirectTo === '/dashboard';
 
     // === STRICT PORTAL ACCESS RULES ===
-    
+
     // Rule 1: Staff portal (/admin/login) - ONLY staff roles allowed
     if (isStaffPortal) {
       if (!staffRoles.includes(user.role)) {
@@ -458,7 +459,6 @@ export async function createReview(prevState: any, formData: FormData) {
     }
 
     // ✅ KEY FIX: Keyword Generation
-    console.log("Generating keywords for content:", content);
     let formattedKeywords: string[] = [];
 
     try {
@@ -466,7 +466,6 @@ export async function createReview(prevState: any, formData: FormData) {
       // So we just use the result directly.
       const aiKeywords = await generateReviewKeywords(content);
 
-      console.log("AI Keywords Generated:", aiKeywords);
 
       if (Array.isArray(aiKeywords)) {
         formattedKeywords = aiKeywords;
@@ -742,7 +741,6 @@ export async function toggleHelpful(reviewId: string, currentPath: string) {
 export async function incrementReviewReads(reviewIds: string[]) {
   if (!reviewIds.length) return;
 
-  console.log("🚀 Starting read increment for:", reviewIds);
 
   try {
     // Fetch current values first to debug
@@ -751,7 +749,6 @@ export async function incrementReviewReads(reviewIds: string[]) {
       select: { id: true, reads: true }
     });
 
-    console.log("📊 Current Reads before update:", reviews);
 
     // Update each one individually to ensure it works
     for (const r of reviews) {
@@ -763,7 +760,6 @@ export async function incrementReviewReads(reviewIds: string[]) {
       });
     }
 
-    console.log("✅ Successfully incremented reads for", reviews.length, "reviews.");
 
   } catch (error) {
     console.error("❌ Failed to track views", error);
@@ -786,15 +782,13 @@ export async function incrementCompanyView(companyId: string) {
       return;
     }
 
-    console.log(`🔍 Found Company: ${company.name}`);
-    console.log(`📊 Current Views in DB: ${company.views} (Type: ${typeof company.views})`);
+
 
     // 2. Calculate the new value safely
     // If null/undefined, start at 0. Ensure it's treated as a Number.
     const currentCount = company.views ? Number(company.views) : 0;
     const newCount = currentCount + 1;
 
-    console.log(`🔄 Attempting to update to: ${newCount}`);
 
     // 3. Explicitly SET the new value (bypassing atomic increment)
     const result = await prisma.company.update({
@@ -804,7 +798,6 @@ export async function incrementCompanyView(companyId: string) {
       }
     });
 
-    console.log(`✅ Update successful. New DB Value: ${result.views}`);
 
   } catch (error) {
     console.error("❌ Failed to track view manually:", error);
@@ -1163,7 +1156,6 @@ export async function resolveReport(
   action: 'DELETE' | 'KEEP' | 'WARN',
   adminNote: string
 ) {
-  console.log("🚀 START: resolveReport called with:", { reportId, action, adminNote }); // DEBUG LOG
 
   const session = await auth();
   if (session?.user?.role !== 'ADMIN') return { error: "Unauthorized" };
@@ -1180,7 +1172,6 @@ export async function resolveReport(
     }
 
     const reviewAuthorId = report.review?.userId;
-    console.log("👤 Review Author ID found:", reviewAuthorId); // DEBUG LOG
 
     // --- 1. DEFINE MESSAGES ---
     let authorMessage = adminNote;
@@ -1208,7 +1199,6 @@ export async function resolveReport(
     // --- 3. HANDLE REVIEW MODIFICATION ---
     if (action === 'DELETE' && reviewId) {
       await prisma.review.delete({ where: { id: reviewId } });
-      console.log("🗑️ Review deleted");
     }
 
     if (action === 'WARN' && reviewId) {
@@ -1216,12 +1206,10 @@ export async function resolveReport(
         where: { id: reviewId },
         data: { isFlagged: true, adminMessage: authorMessage }
       });
-      console.log("🚩 Review Flagged successfully");
     }
 
     // --- 4. NOTIFY AUTHOR ---
     if (reviewAuthorId && action !== 'KEEP') {
-      console.log("🔔 Attempting to create notification for:", reviewAuthorId); // DEBUG LOG
 
       try {
         await prisma.notification.create({
@@ -1232,7 +1220,6 @@ export async function resolveReport(
             message: authorMessage,
           }
         });
-        console.log("✅ Notification Created Successfully!"); // DEBUG LOG
       } catch (notifError) {
         console.error("❌ Notification Creation FAILED:", notifError); // DEBUG LOG
       }
@@ -1249,7 +1236,6 @@ export async function resolveReport(
         resolution: reporterMessage
       }
     });
-    console.log("📝 Report updated with message:", reporterMessage); // DEBUG LOG
 
     revalidatePath('/admin/reports');
     revalidatePath('/dashboard');
@@ -1262,8 +1248,8 @@ export async function resolveReport(
   }
 }
 
-// --- 16. DISMISS REPORT (User Dashboard) ---
 export async function dismissReport(reportId: string) {
+  // --- 16. DISMISS REPORT (User Dashboard) ---
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) return { error: "Unauthorized" };
@@ -1762,7 +1748,7 @@ export async function approveBusinessClaim(claimId: string) {
 
     // 5. SEND EMAIL
     const businessName = claim.businessName || "your business";
-    console.log(`Sending approval email to: ${claim.workEmail}`);
+
 
     // We don't await the result to block the UI, but we log errors if they happen
     const emailResult = await sendApprovalEmail(claim.workEmail, token, businessName);
@@ -1797,7 +1783,7 @@ export async function rejectBusinessClaim(claimId: string) {
 
     // 2. SEND REJECTION EMAIL
     const businessName = claim.businessName || "your business";
-    console.log(`Sending rejection email to: ${claim.workEmail}`);
+
 
     const emailResult = await sendRejectionEmail(claim.workEmail, businessName);
 
@@ -1823,7 +1809,7 @@ export async function updateCompanyProfile(prevState: any, formData: FormData) {
   }
 
   const companyId = session.user.companyId;
-  console.log(formData, "Received form data for company update"); // DEBUG LOG
+
   // 1. Extract Text Data
   const briefIntroduction = formData.get('description') as string;
   const websiteUrl = formData.get('websiteUrl') as string;

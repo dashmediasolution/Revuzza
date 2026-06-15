@@ -3,7 +3,6 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🔄 Starting full score recalculation...");
 
   const companies = await prisma.company.findMany({
     include: { reviews: { select: { starRating: true } } }
@@ -29,10 +28,8 @@ async function main() {
       }
     });
     
-    console.log(`✅ Updated ${company.name}: ${N} reviews -> Score: ${newRating.toFixed(2)}`);
   }
 
-  console.log("🚀 All companies updated!");
 }
 
 main()

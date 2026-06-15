@@ -32,7 +32,7 @@ export function ContactDetailsCard({ websiteUrl, email, address }: ContactDetail
                 <TranslatableText text="Website" />
             </p>
             <a 
-              href={websiteUrl} 
+              href= {`https://${formatUrl(websiteUrl)}`}
               target="_blank" 
               rel="noopener noreferrer" 
               className="text-blue-600 hover:underline text-sm truncate block"

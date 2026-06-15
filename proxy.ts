@@ -10,21 +10,6 @@ export default auth((req) => {
 
   if (!req.auth) return NextResponse.next()
 
-  // ✅ Role → default route map
-  const roleRedirectMap: Record<Role, string> = {
-    USER: "/",
-    BUSINESS: "/business",
-    DATA_ENTRY: "/data-entry",
-    BLOG_ENTRY: "/blog-entry",
-    ADMIN: "/admin",
-  }
-
-  // ✅ Redirect "/" based on role
-  // if (pathname === "/" && role) {
-  //   return NextResponse.redirect(
-  //     new URL(roleRedirectMap[role], req.nextUrl)
-  //   )
-  // }
 
   // ✅ BUSINESS restriction
   if (role === "BUSINESS") {

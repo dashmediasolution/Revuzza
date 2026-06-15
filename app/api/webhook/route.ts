@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
 
 
-    console.log("Razorpay webhook received");
+
   const body = await req.text(); // ⚠️ raw body required
 
   const signature = req.headers.get("x-razorpay-signature")!;
@@ -19,13 +19,13 @@ export async function POST(req: Request) {
   }
 
   const event = JSON.parse(body);
-  console.log("Received Razorpay webhook event:", event);
+
   // 🎯 Handle events   
   if (event.event === "payment.captured") {
     const payment = event.payload.payment.entity;
 
-    console.log("✅ Payment captured:", payment.id);
 
+    
     // 👉 Update DB here (safer than frontend)
   }
 

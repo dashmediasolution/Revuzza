@@ -42,7 +42,7 @@ export const sendApprovalEmail = async (email: string, token: string, businessNa
         </div>
       `,
     });
-    console.log("✅ Approval Email Sent:", info.messageId);
+
     return { success: true };
   } catch (error) {
     console.error("❌ Nodemailer Error (Approval):", error);
@@ -77,7 +77,7 @@ export const sendRejectionEmail = async (email: string, businessName: string) =>
         </div>
       `,
     });
-    console.log("✅ Rejection Email Sent:", info.messageId);
+
     return { success: true };
   } catch (error) {
     console.error("❌ Nodemailer Error (Rejection):", error);
@@ -135,7 +135,7 @@ export const sendReviewInvite = async (
     const data = await resend.emails.send({
       // 1. FROM: Use Resend's default until you verify your own domain (e.g., invites@help.com)
       // The format is: "Business Name <system-email>"
-      from: `${businessName} <onboarding@resend.dev>`, 
+      from: `${businessName} <${process.env.BUSINESS_DOMAIN_EMAIL}>`, 
       
       // 2. REPLY-TO: This is the magic. Replies go to the business owner.
       replyTo: senderEmail,
@@ -229,7 +229,7 @@ export const sendProfessionalCampaign = async (
 
   // Send via Resend
   await resend.emails.send({
-    from: `${businessName} <onboarding@resend.dev>`,
+    from: `${businessName} <${process.env.BUSINESS_DOMAIN_EMAIL}>`,
     to: [toEmail],
     replyTo: replyTo,
     subject: subject,
@@ -293,7 +293,7 @@ export const sendForgotPasswordEmail = async (
       `,
     });
 
-    console.log("✅ Forgot Password Email Sent:", info.messageId);
+
     return { success: true };
 
   } catch (error) {

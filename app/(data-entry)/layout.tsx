@@ -11,7 +11,7 @@ export default async function DataEntryLayout({ children }: { children: React.Re
     <div className="flex min-h-screen bg-gray-50">
       {/* ✅ Pass Role and Name */}
       <AdminSidebar userRole="DATA_ENTRY" userName={session.user.name || "Staff"} />
-      <div className="flex-1 p-8 ml-[3.5rem] lg:ml-[3.5rem]"> {/* Add margin-left for collapsed sidebar */}
+      <div className="flex-1 p-8 ml-3.5rem lg:ml-3.5rem "> {/* Add margin-left for collapsed sidebar */}
         {children}
       </div>
     </div>

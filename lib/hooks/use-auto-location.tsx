@@ -36,7 +36,7 @@ export function useAutoLocation() {
           const city = data.city || data.locality || data.principalSubdivision;
           
           if (city) {
-            console.log("📍 Auto-detected city:", city); // Debug log
+
             setDetectedLocation(city);
           }
         } catch (error) {

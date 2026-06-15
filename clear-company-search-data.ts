@@ -4,8 +4,8 @@ const prisma = new PrismaClient();
 
 async function main() {
   const TARGET_COMPANY_ID = "693a5425b2c9d0bd5decf4bb";
-
   console.log(`🔍 Checking Search & PPC records for Company ID: ${TARGET_COMPANY_ID}...`);
+
 
   try {
     // 1. Check how many records exist before deleting

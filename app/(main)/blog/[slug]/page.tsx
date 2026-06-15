@@ -97,6 +97,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 // --- MAIN PAGE COMPONENT ---
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+
   const { slug } = await params;
 
   // 1. Fetch Blog Data
@@ -139,6 +140,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       whereClause.city = { equals: blog.linkedCity, mode: 'insensitive' };
     }
 
+    
     topCompanies = await prisma.company.findMany({
       where: whereClause,
       orderBy: { rating: 'desc' },
@@ -203,7 +205,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       {blog.imageUrl && (
         <div className="w-full pb-12 pt-12 md:pt-20 md:pb-20">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <div className="relative aspect-[21/9] w-full rounded-2xl overflow-hidden">
+            <div className="relative aspect-21/9  w-full rounded-2xl overflow-hidden">
               <Image
                 src={blog.imageUrl}
                 alt={blog.headline}

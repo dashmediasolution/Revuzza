@@ -230,26 +230,30 @@ export function Header({ user, variant = 'user' }: HeaderProps) {
               <div className="flex flex-col gap-3">
                 <Link
                   href={
-                    ["/blog-entry", "/data-entry"].includes(dashboardPath)
+                    ["/blog-entry", "/data-entry", "/admin"].includes(dashboardPath)
                       ? dashboardPath
                       : `${dashboardPath}/dashboard`
                   }
                   className="flex items-center hover:text-[#0ABED6]"
-                > 
+                >
                   <LayoutDashboard className="mr-2 h-4 w-4" />
                   My Dashboard
                 </Link>
-                <Link
-                  href={
-                    ["/blog-entry", "/data-entry"].includes(dashboardPath)
-                      ? dashboardPath
-                      : `${dashboardPath}/settings`
-                  }
-                  className="flex items-center hover:text-[#0ABED6]"
-                >
-                  <LayoutDashboard className="mr-2 h-4 w-4" />
-                  Settings
-                </Link>
+                {role === "USER" &&
+                  <>
+                    <Link
+                      href={
+                        ["/blog-entry", "/data-entry"].includes(dashboardPath)
+                          ? dashboardPath
+                          : `${dashboardPath}/dashboard/settings`
+                      }
+                      className="flex items-center hover:text-[#0ABED6]"
+                    > 
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Settings
+                    </Link>
+                  </>
+                }
                 <button
                   onClick={() => { signOut({ callbackUrl: '/' }); setOpen(false); }}
                   className="flex items-center gap-2 text-red-600 font-medium p-2 hover:bg-red-50 rounded-md w-full text-left"
@@ -303,9 +307,9 @@ function MobileMenu({ open, children }: { open: boolean, children: React.ReactNo
     <div
       id="mobile-menu"
       className={cn(
-        'bg-white fixed top-16 right-0 bottom-0 left-0 z-40 flex flex-col overflow-y-auto border-t animate-in slide-in-from-top-5 duration-200 md:hidden',
+        'bg-white fixed top-16 right-0 bottom-0 left-0 z-40 flex flex-col overflow-y-auto  border-t animate-in slide-in-from-top-5 duration-200 md:hidden',
       )}
-    >
+    >  
       {children}
     </div>,
     document.body,

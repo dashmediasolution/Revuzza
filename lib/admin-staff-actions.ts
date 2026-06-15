@@ -29,7 +29,7 @@ export async function createStaffAccount(formData: FormData) {
         emailVerified: new Date(), 
       },
     });
-
+  
     revalidatePath("/admin/staff");
     return { success: true };
   } catch (error) {

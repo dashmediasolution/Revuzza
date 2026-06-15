@@ -3,8 +3,8 @@ import { prisma } from "@/lib/prisma";
 // --- PART 1: PLATFORM ANALYTICS ---
 
 export async function generatePlatformReport() {
-  console.log("📊 Starting Platform Analysis...");
 
+  
   // 1. Fetch Current Counts
   const totalUsers = await prisma.user.count();
   const totalReviews = await prisma.review.count();
@@ -50,14 +50,14 @@ export async function generatePlatformReport() {
     }
   });
 
-  console.log("✅ Platform Report Generated!");
+
 }
 
 
 // --- PART 2: COMPANY ANALYTICS (Batch Process) ---
 
 export async function generateAllCompanyReports() {
-  console.log("🏭 Starting Company Analysis...");
+
   
   const companies = await prisma.company.findMany({
     include: { reviews: { select: { starRating: true } } }
@@ -92,5 +92,5 @@ export async function generateAllCompanyReports() {
     });
   }
   
-  console.log(`✅ Generated reports for ${companies.length} companies.`);
+
 }

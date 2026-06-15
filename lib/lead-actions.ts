@@ -63,8 +63,8 @@ export async function submitQuoteRequest(companyId: string, formData: FormData) 
     // 3. Send Email (Mocking the send function here)
     // In production, replace this with your actual email service (Resend/Nodemailer)
     // await sendLeadNotificationEmail(companyEmail, { name, email, details });
-    console.log(`📧 Quote Request sent to Company ${companyId} from ${email}`);
 
+    
     return { success: true, message: "Quote request sent successfully!" };
 
   } catch (error) {

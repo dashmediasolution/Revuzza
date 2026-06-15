@@ -147,8 +147,8 @@ export async function createCampaign(prevState: any, formData: FormData) {
       }
       let res:any;
       for (const recipient of recipientList) {
-        console.log(recipient,"recipient")
-       res =  await sendProfessionalCampaign(
+
+        res =  await sendProfessionalCampaign(
            recipient,
            company?.name || "Business",
            senderEmail,
@@ -161,7 +161,7 @@ export async function createCampaign(prevState: any, formData: FormData) {
         );
         sentCount++;
       }
-      console.log(res,"email response")
+
       status = "SENT";
       sentAt = new Date();
   }

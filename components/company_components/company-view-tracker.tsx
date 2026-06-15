@@ -15,7 +15,7 @@ export function CompanyViewTracker({ companyId }: { companyId: string }) {
       // 3. Mark as run BEFORE calling the action
       hasRun.current = true;
       
-      console.log("👀 CompanyViewTracker firing (Once)");
+
       incrementCompanyView(companyId);
     }
   }, [companyId]);
