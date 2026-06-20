@@ -118,7 +118,7 @@ export function BadgeModal({ companyId, companyName, currentBadges, plan }: Badg
                  <div className="grid gap-1.5 leading-none w-full">
                    <div className="text-sm font-medium leading-none flex items-center justify-between gap-2">
                      <div className="flex items-center gap-2">
-                        <span className={`p-1 rounded-full ${config.bg}`}>
+                        <span className="p-1 rounded-full">
                             <Icon className={`h-3 w-3 ${config.color}`} />
                         </span>
                         {config.label}

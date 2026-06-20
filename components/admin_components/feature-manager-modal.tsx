@@ -145,7 +145,7 @@ export function FeatureManagerModal({ company }: FeatureModalProps) {
 
                         return (
                             <div key={badgeId} className="flex items-center gap-3 p-2 rounded border bg-gray-50 border-gray-200 opacity-80">
-                                <span className={`p-1 rounded-full ${config.bg} scale-75`}>
+                                <span className="p-1 rounded-full scale-75">
                                     <Icon className={`h-3 w-3 ${config.color}`} />
                                 </span>
                                 <div>

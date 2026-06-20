@@ -11,7 +11,7 @@ import {
 import UnderlineExtension from '@tiptap/extension-underline';
 import LinkExtension from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
-import ImageExtension from '@tiptap/extension-image'; 
+import ImageExtension from '@tiptap/extension-image';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 // Import the server action we created
@@ -110,7 +110,7 @@ export function RichTextEditor({ value, onChange, onBlur }: RichTextEditorProps)
       UnderlineExtension,
       LinkExtension.configure({ openOnClick: false }),
       TextAlign.configure({
-        types: ['heading', 'paragraph', 'image'], 
+        types: ['heading', 'paragraph', 'image'],
       }),
       ImageExtension.configure({
         inline: true,
@@ -122,7 +122,7 @@ export function RichTextEditor({ value, onChange, onBlur }: RichTextEditorProps)
       onChange(editor.getHTML());
     },
     onBlur() {
-      if(onBlur) onBlur();
+      if (onBlur) onBlur();
     },
     editorProps: {
       attributes: {
@@ -138,7 +138,7 @@ export function RichTextEditor({ value, onChange, onBlur }: RichTextEditorProps)
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    
+
     input.onchange = async (event) => {
       const file = (event.target as HTMLInputElement).files?.[0];
       if (file) {
@@ -154,13 +154,13 @@ export function RichTextEditor({ value, onChange, onBlur }: RichTextEditorProps)
           const result = await uploadEditorImage(formData);
 
           if (result.success && result.url) {
-            editor?.chain().focus().setImage({ 
+            editor?.chain().focus().setImage({
               src: result.url,
-              alt: altText 
+              alt: altText
             }).run();
-            
+
             toast.success('Image uploaded successfully', { id: toastId });
-          } else {
+          } else {                                                                                              
             toast.error(result.error || 'Failed to upload image', { id: toastId });
           }
         } catch (error) {
@@ -169,7 +169,7 @@ export function RichTextEditor({ value, onChange, onBlur }: RichTextEditorProps)
         }
       }
     };
-    
+
     input.click();
   }, [editor]);
 
@@ -178,7 +178,7 @@ export function RichTextEditor({ value, onChange, onBlur }: RichTextEditorProps)
     if (editor && !editor.isDestroyed) {
       // Only set content if editor is empty or on initial load to prevent cursor jumping
       if (value && editor.isEmpty) {
-         editor.commands.setContent(value);
+        editor.commands.setContent(value);
       }
     }
   }, [value, editor]);

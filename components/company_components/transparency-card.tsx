@@ -66,7 +66,7 @@ export function TransparencyCard({ companyName, badges = [], plan = "FREE" }: Tr
            const Icon = config.icon;
            return (
              <div key={badgeId} className="flex gap-3 items-start animate-in fade-in slide-in-from-left-2">
-                <div className={`p-2 rounded-full shrink-0 ${config.bg}`}>
+                <div className="p-2 rounded-full shrink-0">
                    <Icon className={`h-5 w-5 ${config.color}`} />
                 </div>
                 <div>

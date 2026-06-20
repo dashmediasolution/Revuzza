@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, AlertCircle, ShieldCheck } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
 
 function LoginButton() {
   const { pending } = useFormStatus();
@@ -22,14 +21,13 @@ function LoginButton() {
   );
 }
 
-export function AdminLoginForm() {
+export function AdminLoginForm({
+  callbackUrl,
+}: {
+  callbackUrl: string;
+}) {
   const [errorMessage, formAction] = useActionState(authenticate, undefined);
-  const searchParams = useSearchParams();
-  
-  // Default to /admin. 
-  // NOTE: Your Admin Layout will automatically redirect Data Entry staff 
-  // to /data-entry if they land on /admin.
-  const callbackUrl = searchParams.get('callbackUrl') || '/admin';
+ 
 
   return (
     <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-2xl border border-slate-200">
