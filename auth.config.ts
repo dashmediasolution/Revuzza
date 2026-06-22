@@ -2,46 +2,52 @@
 import type { NextAuthConfig } from 'next-auth';
 
 export const authConfig = {
-
-  
   pages: {
     signIn: '/login',
   },
+  session: { strategy: 'jwt' },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-
       const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
       const isOnAuth = nextUrl.pathname.startsWith('/login') || nextUrl.pathname.startsWith('/signup');
 
-      // 1. Protected Routes: Redirect unauthenticated users to login
       if (isOnDashboard) {
         if (isLoggedIn) return true;
         return false;
       }
 
-      // 2. Auth Routes: Redirect authenticated users
       if (isOnAuth && isLoggedIn) {
-        // --- FIX START ---
-        // Check if there is a callbackUrl in the query params
         const callbackUrl = nextUrl.searchParams.get('callbackUrl');
-
         if (callbackUrl) {
-          // If there is a callbackUrl, redirect there
           return Response.redirect(new URL(callbackUrl, nextUrl));
         }
-
-        // Otherwise, default to dashboard
         return Response.redirect(new URL('/dashboard', nextUrl));
-        // --- FIX END ---
       }
 
       return true;
     },
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id as string;
+        token.role = (user.role as string) || 'USER';
+        token.companyId = user.companyId as string;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id;
+        session.user.role = token.role;
+        session.user.companyId = token.companyId;
+      }
+      return session;
+    },
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
+    },
   },
-  providers: [],
+  providers: [], // Keep this empty here; we'll populate it in auth.ts
 } satisfies NextAuthConfig;
-
-
-
-

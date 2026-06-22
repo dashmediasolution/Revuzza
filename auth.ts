@@ -1,5 +1,4 @@
 // auth.ts  
-
 import NextAuth from 'next-auth';
 import { authConfig } from './auth.config';
 import Credentials from 'next-auth/providers/credentials';
@@ -9,7 +8,6 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { logger } from './logger';
-
 
 async function getUser(email: string) {
   try {
@@ -22,47 +20,9 @@ async function getUser(email: string) {
   }
 }
 
-
-
-
-
 export const { auth, signIn, signOut, handlers } = NextAuth({
-  ...authConfig,
+  ...authConfig, // Spreads your jwt, session, and authorized logic
   adapter: PrismaAdapter(prisma),
-  session: { strategy: 'jwt' },
-  
-  // --- CALLBACKS SECTION ---
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        // 1. On sign in, user object is available. Copy ID to token.
-        token.id = user.id as string;
-        token.role = user.role as string || 'USER';
-        token.companyId = user.companyId as string; 
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        // 2. On every request, copy ID from token to session.
-        session.user.id = token.id;
-        session.user.role = token.role;
-        session.user.companyId = token.companyId;
-      }
-      return session;
-    },
-
-    async redirect({ url, baseUrl }) {
-      // Allows relative callback URLs
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      // Allows callback URLs on the same origin
-      if (new URL(url).origin === baseUrl) return url;
-      return baseUrl;
-    },
-    
-  },
-  // ----------------------------------
-
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -78,7 +38,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
     Credentials({
       async authorize(credentials) {
         const parsedCredentials = z
-          .object({ email: z.email(), password: z.string().min(6) })
+          .object({ email: z.string().email(), password: z.string().min(6) })
           .safeParse(credentials);
         
         if (parsedCredentials.success) {
@@ -87,6 +47,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
           
           if (!user || !user.password) return null;
 
+          // bcryptjs runs safely here because it's not imported into middleware anymore
           const passwordsMatch = await bcrypt.compare(password, user.password);
           if (passwordsMatch) return user;
         }
