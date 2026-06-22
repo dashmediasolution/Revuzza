@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next'
 import { prisma } from '@/lib/prisma'
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, '') ||
+  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ||
   'http://localhost:3000'
 
 type SitemapEntry = MetadataRoute.Sitemap[0]
