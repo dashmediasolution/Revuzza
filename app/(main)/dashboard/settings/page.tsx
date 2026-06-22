@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { SettingsForm } from '@/components/dashboard_components/settings-form';
 
 export const metadata = {
-  title: 'Profile Settings - Help',
+  title: 'Profile Settings - Revuzza',
 };
 
 export default async function SettingsPage() {

@@ -3,7 +3,7 @@ import { WriteReviewHero } from '@/components/write-review_components/write-revi
 import { TrustBentoGrid } from '@/components/write-review_components/trust-bento-grid';
 
 export const metadata = {
-  title: 'Write a Review - Help',
+  title: 'Write a Review - Revuzza',
   description: 'Share your experience and help others make better choices.',
 };
 

@@ -13,7 +13,7 @@ export function InfoBanner() {
           {/* Left Column: Main Message */}
           <div className="p-8 md:p-10  col-span-1 md:col-span-1 lg:col-span-2 flex flex-col justify-center">
             <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4 leading-tight">
-              <TranslatableText text="At Help" />
+              <TranslatableText text="At Revuzza" />
             </h2>
             <div className="text-lg text-white mb-6">
               <TranslatableText 

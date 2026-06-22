@@ -24,7 +24,7 @@ export function BusinessCTA() {
             </h2>
             <p className="text-white text-base md:text-lg">
               {/* ✅ Translatable Description */}
-              <TranslatableText text="Strengthen your reputation with reviews on Help." />
+              <TranslatableText text="Strengthen your reputation with reviews on Revuzza." />
             </p>
           </div>
 

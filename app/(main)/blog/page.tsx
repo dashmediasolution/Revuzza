@@ -31,7 +31,7 @@ export default async function BlogPage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-16">
             <h1 className="text-lg font-black tracking-tighter text-gray-900">
-               <TranslatableText text="Help / Journal" />
+               <TranslatableText text="Revuzza / Journal" />
             </h1>
 
             <div className="flex items-center gap-10 overflow-x-auto no-scrollbar">

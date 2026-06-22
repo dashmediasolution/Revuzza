@@ -12,7 +12,7 @@ export function PlatformTrustBadge() {
       </div>
       
       <p className="text-md font-medium text-slate-700 leading-relaxed">
-        <TranslatableText text="Companies on" /> <span className="font-bold text-slate-900">help</span> <TranslatableText text="cannot pay to remove reviews or use incentives to influence ratings." />
+        <TranslatableText text="Companies on" /> <span className="font-bold text-slate-900">revuzza</span> <TranslatableText text="cannot pay to remove reviews or use incentives to influence ratings." />
       </p>
     </div>
   );

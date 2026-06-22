@@ -35,7 +35,7 @@ export function BusinessProfileFeature() {
           
           <div className="space-y-6 text-lg text-gray-600 leading-relaxed">
             <p>
-              <TranslatableText text="Reviews are published right to your profile page on Help, creating an endless stream of fresh and relevant content about your brand." />
+              <TranslatableText text="Reviews are published right to your profile page on Revuzza, creating an endless stream of fresh and relevant content about your brand." />
             </p>
             <p>
               <TranslatableText text="This rich, user-generated content helps improve your rankings in search results, making it easier for new customers to find and trust you." />

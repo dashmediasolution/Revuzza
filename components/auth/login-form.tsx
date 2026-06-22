@@ -69,14 +69,14 @@ export function LoginForm() {
         {/* Content overlay */}
         <div className="relative z-10">
           <Link href="/" className="text-3xl font-bold tracking-tight text-white">
-            help
+            revuzza
           </Link>
         </div>
 
         <div className="relative z-10 space-y-6">
           <Quote className="h-8 w-8 text-[#0ABED6] opacity-80" />
           <p className="text-xl font-medium leading-relaxed">
-            "<TranslatableText text="Help is the world's most powerful review platform, free and open to all. Our mission is to bring people and companies together to create ever-improving experiences for everyone." />"
+            "<TranslatableText text="Revuzza is the world's most powerful review platform, free and open to all. Our mission is to bring people and companies together to create ever-improving experiences for everyone." />"
           </p>
           <div className="pt-4">
             <p className="text-sm text-gray-400 font-semibold tracking-wide uppercase">

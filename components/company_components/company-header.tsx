@@ -109,7 +109,7 @@ export function CompanyHeader({
                   </TooltipTrigger>
                   <TooltipContent className="max-w-[250px] bg-gray-900 text-white border-gray-800">
                     <p className="text-xs leading-relaxed">
-                      <TranslatableText text="This company has claimed their Help profile as their own. Any company can claim theirs for free to reply to reviews, ask customers to review them, and more." />
+                      <TranslatableText text="This company has claimed their Revuzza profile as their own. Any company can claim theirs for free to reply to reviews, ask customers to review them, and more." />
                     </p>
                   </TooltipContent>
                 </Tooltip>

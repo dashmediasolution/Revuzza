@@ -3,7 +3,7 @@
 import { SignUpForm } from '@/components/auth/signup-form';
 
 export const metadata = {
-  title: 'Sign Up - Help',
+  title: 'Sign Up - Revuzza',
   description: 'Create an account to review companies.',
 };
 

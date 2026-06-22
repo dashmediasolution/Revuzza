@@ -56,7 +56,7 @@ export function BusinessSolutionsSection() {
         {/* Right: Content */}
         <div className="order-1 lg:order-2 space-y-8">
           <h2 className="text-2xl md:text-3xl font-bold text-[#000032] tracking-tight">
-            <TranslatableText text="Go further with Help solutions" />
+            <TranslatableText text="Go further with Revuzza solutions" />
           </h2>
           
           <ul className="space-y-6">

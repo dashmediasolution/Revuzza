@@ -5,7 +5,7 @@ import { WhatWeDoSection } from '@/components/about_components/what-we-do-sectio
 import { OurValuesSection } from '@/components/about_components/our-values-section';
 
 export const metadata = {
-  title: 'About Us - help',
+  title: 'About Us - revuzza',
   description: 'Learn about our mission to become the universal symbol of trust.',
 };
 

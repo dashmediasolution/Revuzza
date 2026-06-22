@@ -21,7 +21,7 @@ export function BusinessHero() {
                         <TranslatableText text="The world's largest independent customer feedback platform" />
                     </h1>
                     <p className="text-lg lg:text-xl text-gray-500 font-medium max-w-lg mx-auto lg:mx-0 leading-relaxed">
-                        <TranslatableText text="Attract and keep customers with Help's review platform and powerful analytics tools." />
+                        <TranslatableText text="Attract and keep customers with Revuzza's review platform and powerful analytics tools." />
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">

@@ -4,7 +4,7 @@ import { XCircle, Star } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-export const metadata = { title: "Set Password - Help Business" };
+export const metadata = { title: "Set Password - Revuzza Business" };
 
 export default async function SetPasswordPage({
   searchParams,
@@ -41,7 +41,7 @@ export default async function SetPasswordPage({
              <div className="inline-flex items-center justify-center p-3 bg-blue-50 rounded-xl mb-4">
                 <Star className="h-8 w-8 text-[#000032] fill-current" />
              </div>
-             <h1 className="text-2xl font-bold text-[#000032]">Welcome to Help!</h1>
+             <h1 className="text-2xl font-bold text-[#000032]">Welcome to Revuzza!</h1>
              <p className="text-gray-500 mt-2 text-sm">
                Set a secure password to activate your dashboard for <br/>
                <span className="font-semibold text-[#000032]">{invite.email}</span>

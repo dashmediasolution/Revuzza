@@ -3,7 +3,7 @@
 import { LoginForm } from '@/components/auth/login-form';
 
 export const metadata = {
-  title: 'Log In - Help',
+  title: 'Log In - Revuzza',
   description: 'Log in to your account.',
 };
 

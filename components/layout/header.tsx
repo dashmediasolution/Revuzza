@@ -16,6 +16,7 @@ import { NotificationBell } from '@/components/layout/notification-bell';
 import { LanguageSelector } from "@/components/shared/language-selector";
 import { TranslatableText } from "@/components/shared/translatable-text";
 import { useSession } from "next-auth/react"
+import Image from "next/image";
 
 type NavLink = {
   label: string;
@@ -77,17 +78,26 @@ export function Header({ user, variant = 'user' }: HeaderProps) {
     >
       {isBusiness ? (
         <div className="flex flex-col items-start justify-center leading-none">
-          <span className="text-2xl font-bold tracking-tight text-gray-900 group-hover:text-[#0ABED6] transition-colors">
-            help
-          </span>
+          <Image
+            src="/images/logo.png"
+            alt="Revuzza logo"
+            width={180}
+            height={50}
+            priority
+          />
+
           <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.2em] ml-[1px]">
             business
           </span>
         </div>
       ) : (
-        <span className="text-2xl font-bold tracking-tight text-gray-900 group-hover:text-[#0ABED6] transition-colors">
-          help
-        </span>
+         <Image
+            src="/images/logo.png"
+            alt="Revuzza logo"
+            width={180}
+            height={50}
+            priority
+          />
       )}
     </Link>
   );
@@ -248,7 +258,7 @@ export function Header({ user, variant = 'user' }: HeaderProps) {
                           : `${dashboardPath}/dashboard/settings`
                       }
                       className="flex items-center hover:text-[#0ABED6]"
-                    > 
+                    >
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       Settings
                     </Link>
@@ -309,7 +319,7 @@ function MobileMenu({ open, children }: { open: boolean, children: React.ReactNo
       className={cn(
         'bg-white fixed top-16 right-0 bottom-0 left-0 z-40 flex flex-col overflow-y-auto  border-t animate-in slide-in-from-top-5 duration-200 md:hidden',
       )}
-    >  
+    >
       {children}
     </div>,
     document.body,

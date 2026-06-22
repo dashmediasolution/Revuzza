@@ -11,7 +11,7 @@ export function DataInsightsSection() {
        {/* Left: Text Content */}
         <div className="space-y-8 max-w-3xl">
           <h2 className="text-2xl md:text-3xl font-bold text-black leading-tight">
-            <TranslatableText text="Help Data Solutions," /> <br/>
+            <TranslatableText text="Revuzza Data Solutions," /> <br/>
             <TranslatableText text="powered by" /> <span className="text-[#0892A5]">InsightLayer</span>
           </h2>
           

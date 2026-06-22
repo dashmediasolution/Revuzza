@@ -25,11 +25,11 @@ export function Footer() {
               <TranslatableText text="About" />
             </h4>
             <ul className="space-y-3 text-sm font-medium text-white/90">
-              <li><Link href="/" className="hover:text-white hover:underline transition-colors"><TranslatableText text="Help" /></Link></li>
+              <li><Link href="/" className="hover:text-white hover:underline transition-colors"><TranslatableText text="Revuzza" /></Link></li>
               <li><Link href="/about" className="hover:text-white hover:underline transition-colors"><TranslatableText text="About us" /></Link></li>
               <li><Link href="/contact" className="hover:text-white hover:underline transition-colors"><TranslatableText text="Contact" /></Link></li>
               <li><Link href="/blog" className="hover:text-white hover:underline transition-colors"><TranslatableText text="Blog" /></Link></li>
-              <li><Link href="/how-help-works" className="hover:text-white hover:underline transition-colors"><TranslatableText text="How Help works" /></Link></li>
+              <li><Link href="/how-revuzza-works" className="hover:text-white hover:underline transition-colors"><TranslatableText text="How Revuzza works" /></Link></li>
             </ul>
           </div>
 
@@ -39,7 +39,7 @@ export function Footer() {
               <TranslatableText text="Community" />
             </h4>
             <ul className="space-y-3 text-sm font-medium text-white/90">
-              <li><Link href="/help" className="hover:text-white hover:underline transition-colors"><TranslatableText text="Help in reviews" /></Link></li>
+              <li><Link href="/revuzza" className="hover:text-white hover:underline transition-colors"><TranslatableText text="Revuzza in reviews" /></Link></li>
               <li><Link href="/login" className="hover:text-white hover:underline transition-colors"><TranslatableText text="Log in" /></Link></li>
               <li><Link href="/signup" className="hover:text-white hover:underline transition-colors"><TranslatableText text="Sign up" /></Link></li>
             </ul>
@@ -51,7 +51,7 @@ export function Footer() {
               <TranslatableText text="Businesses" />
             </h4>
             <ul className="space-y-3 text-sm font-medium text-white/90">
-              <li><Link href="/business" className="hover:text-white hover:underline transition-colors"><TranslatableText text="Help Business" /></Link></li>
+              <li><Link href="/business" className="hover:text-white hover:underline transition-colors"><TranslatableText text="Revuzza Business" /></Link></li>
               <li><Link href="/business/features" className="hover:text-white hover:underline transition-colors"><TranslatableText text="Features" /></Link></li>
               <li><Link href="/business/plans" className="hover:text-white hover:underline transition-colors"><TranslatableText text="Plans & Pricing" /></Link></li>
               <li><Link href="/business/login" className="hover:text-white hover:underline transition-colors"><TranslatableText text="Business Login" /></Link></li>
@@ -115,7 +115,7 @@ export function Footer() {
           </div>
 
           <div className="text-center md:text-right opacity-70">
-            <p>© 2025 Help. All rights reserved.</p>
+            <p>© 2025 Revuzza. All rights reserved.</p>
           </div>
         </div>
 

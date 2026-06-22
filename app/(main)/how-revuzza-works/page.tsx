@@ -4,7 +4,7 @@ import { IntegritySection } from "@/components/how-it-works_components/integrity
 import { FAQSection } from "@/components/how-it-works_components/faq-section";
 
 export const metadata = {
-  title: 'How help works - Transparency and Process',
+  title: 'How revuzza works - Transparency and Process',
   description: 'Learn how we maintain trust, process reviews, and ensure transparency for everyone.',
 };
 

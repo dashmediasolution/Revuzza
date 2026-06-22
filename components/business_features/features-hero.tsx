@@ -35,7 +35,7 @@ export function FeaturesHero() {
           <div className="relative w-full h-full flex items-center justify-center ">
              <Image
                 src="/images/features-banner.png" 
-                alt="Help Business Features Dashboard"
+                alt="Revuzza Business Features Dashboard"
                 fill
                 className="object-cover"
                 priority

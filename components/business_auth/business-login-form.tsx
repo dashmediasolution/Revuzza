@@ -16,7 +16,7 @@ export function BusinessLoginForm() {
     <div className="w-full max-w-md mx-auto space-y-8">
       
       <div className="space-y-2 text-center lg:text-left">
-        <h1 className="text-3xl font-bold text-black">Login to Help Business</h1>
+        <h1 className="text-3xl font-bold text-black">Login to Revuzza Business</h1>
         <p className="text-gray-600">
           Enter your details to access your business dashboard.
         </p>

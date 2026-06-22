@@ -7,7 +7,7 @@ import { ReviewInsightsFeature } from "@/components/business_features/review-ins
 
 export const metadata = {
   title: "Features - Tools to Grow Your Business",
-  description: "Explore the analytics, widgets, and management tools available on Help Business.",
+  description: "Explore the analytics, widgets, and management tools available on Revuzza Business.",
 };
 
 export default function FeaturesPage() {

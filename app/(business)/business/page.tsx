@@ -7,7 +7,7 @@ import { ClientLogosCarousel } from "@/components/business_components/clients-lo
 import { BusinessTestimonialSection } from "@/components/business_components/business-testimonial-section";
 
 export const metadata = {
-  title: "Help for Business - Grow with Trust",
+  title: "Revuzza for Business - Grow with Trust",
   description: "Join the world's largest independent customer feedback platform.",
 };
 

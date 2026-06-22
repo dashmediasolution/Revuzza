@@ -125,7 +125,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     "dateModified": blog.updatedAt.toISOString(),
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": `https://yourdomain.com/blog/${blog.blogUrl}` // Replace with actual domain
+      "@id": `https://revuzza.com/blog/${blog.blogUrl}` // Replace with actual domain
     }
   };
 

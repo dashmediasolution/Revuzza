@@ -19,12 +19,12 @@ export const sendApprovalEmail = async (email: string, token: string, businessNa
 
   try {
     const info = await transporter.sendMail({
-      from: `"Help Platform" <${process.env.SMTP_EMAIL}>`,
+      from: `"Revuzza Platform" <${process.env.SMTP_EMAIL}>`,
       to: email,
       subject: "✅ Your Business Account is Approved!",
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #000032;">Welcome to Help!</h1>
+          <h1 style="color: #000032;">Welcome to Revuzza!</h1>
           <p>Hello,</p>
           <p>Great news! We have verified your claim for <strong>${businessName}</strong>.</p>
           <p>You can now access your business dashboard to manage reviews, reply to customers, and view analytics.</p>
@@ -54,14 +54,14 @@ export const sendApprovalEmail = async (email: string, token: string, businessNa
 export const sendRejectionEmail = async (email: string, businessName: string) => {
   try {
     const info = await transporter.sendMail({
-      from: `"Help Platform" <${process.env.SMTP_EMAIL}>`,
+      from: `"Revuzza Platform" <${process.env.SMTP_EMAIL}>`,
       to: email,
       subject: "Update on your Business Verification Request",
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #000032;">Verification Update</h2>
           <p>Hello,</p>
-          <p>Thank you for your interest in claiming <strong>${businessName}</strong> on Help.</p>
+          <p>Thank you for your interest in claiming <strong>${businessName}</strong> on Revuzza.</p>
           <p>Unfortunately, we were unable to verify your request with the documents provided.</p>
           
           <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid #ef4444; margin: 20px 0;">
@@ -91,7 +91,7 @@ export const sendDomainVerificationEmail = async (email: string, token: string) 
 
   try {
     await transporter.sendMail({
-      from: `"Help Business Security" <${process.env.SMTP_EMAIL}>`,
+      from: `"Revuzza Business Security" <${process.env.SMTP_EMAIL}>`,
       to: email,
       subject: "Action Required: Verify Company Domain",
       html: `
@@ -99,7 +99,7 @@ export const sendDomainVerificationEmail = async (email: string, token: string) 
           <h2 style="color: #000032;">Verify Domain Ownership</h2>
           <p>Hello,</p>
           <p>We received a request to verify the domain <strong>${email}</strong> for your Business Dashboard.</p>
-          <p>Click the button below to confirm ownership. This helps secure your account.</p>
+          <p>Click the button below to confirm ownership. This Revuzza secure your account.</p>
           
           <div style="margin: 30px 0;">
             <a href="${verifyLink}" style="background-color: #0ABED6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
@@ -163,7 +163,7 @@ export const sendReviewInvite = async (
           </div>
           
           <div style="background-color: #f9fafb; padding: 15px; text-align: center; font-size: 12px; color: #9ca3af; border-top: 1px solid #e5e7eb;">
-            Sent by <strong>${businessName}</strong> using the Help Platform.<br/>
+            Sent by <strong>${businessName}</strong> using the Revuzza Platform.<br/>
             (Replies will be sent to ${senderEmail})
           </div>
         </div>
@@ -221,7 +221,7 @@ export const sendProfessionalCampaign = async (
       </div>
 
       <div style="background-color: #f9fafb; padding: 15px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee;">
-         Sent by ${businessName} via Help Platform.<br/>
+         Sent by ${businessName} via Revuzza Platform.<br/>
          <a href="#" style="color: #999;">Unsubscribe</a>
       </div>
     </div>
@@ -248,7 +248,7 @@ export const sendForgotPasswordEmail = async (
 
   try {
     const info = await transporter.sendMail({
-      from: `"Help Platform" <${process.env.SMTP_EMAIL}>`,
+      from: `"Revuzza Platform" <${process.env.SMTP_EMAIL}>`,
       to: email,
       subject: "🔐 Reset Your Password",
       html: `

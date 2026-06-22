@@ -14,15 +14,16 @@ const noto = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://yourdomain.com"), // 🔴 change this
+  metadataBase: new URL("https://revuzza.com"), // 🔴 change this
 
   title: {
-    default: "Review Platform | Find & Review Companies",
-    template: "%s | Review Platform",
+    default: "Revuzza | Find & Review Companies",
+    template: "%s | Revuzza",
   },
 
   description:
     "Discover trusted company reviews, ratings, and user experiences. Share your feedback and explore top-rated businesses.",
+  manifest: "/manifest.webmanifest",
 
 keywords: [
   "company reviews",
@@ -57,21 +58,21 @@ keywords: [
   "feedback platform",
 ],
 
-  authors: [{ name: "Review Platform Team" }],
-  creator: "Review Platform",
+  authors: [{ name: "Revuzza Team" }],
+  creator: "Revuzza",
 
   openGraph: {
-    title: "Review Platform",
+    title: "Revuzza",
     description:
       "Find and share real reviews about companies worldwide.",
-    url: "https://yourdomain.com",
-    siteName: "Review Platform",
+    url: "https://revuzza.com",
+    siteName: "Revuzza",
     images: [
       {
         url: "/og-image.png", // add this image in public folder
         width: 1200,
         height: 630,
-        alt: "Review Platform",
+        alt: "Revuzza",
       },
     ],
     locale: "en_US",
@@ -80,10 +81,10 @@ keywords: [
 
   twitter: {
     card: "summary_large_image",
-    title: "Review Platform",
+    title: "Revuzza",
     description:
       "Explore company reviews and share your experience.",
-    images: ["/og-image.png"],
+    images: ["/images/logo.png"],
   },
 
   robots: {

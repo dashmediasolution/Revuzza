@@ -65,7 +65,7 @@ export default async function BusinessSignupPage() {
                     <div className="bg-[#0892A5] text-white p-1.5 rounded-md">
                       <Star className="h-6 w-6 fill-current" />
                     </div>
-                    Help
+                    Revuzza
                  </div>
                  <div className="text-gray-600 font-regular text-xl pl-[42px] -mt-2">
                     Business
@@ -99,7 +99,7 @@ export default async function BusinessSignupPage() {
                        Grow performance
                     </div>
                     <p className="text-gray-600 text-sm leading-relaxed pl-9">
-                       Help stars and content are proven to convert at higher rates than those of competitors.
+                       Revuzza stars and content are proven to convert at higher rates than those of competitors.
                     </p>
                  </div>
               </div>

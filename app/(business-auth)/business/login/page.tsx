@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 
 export const metadata = {
-  title: "Business Login - Help",
+  title: "Business Login - Revuzza",
   description: "Log in to manage your reviews and analytics.",
 };
 

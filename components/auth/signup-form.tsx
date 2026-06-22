@@ -68,7 +68,7 @@ export function SignUpForm() {
 
         <div className="relative z-10">
            <Link href="/" className="text-3xl font-bold tracking-tight text-white">
-             help
+             revuzza
            </Link>
         </div>
 

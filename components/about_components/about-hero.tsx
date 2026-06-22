@@ -13,7 +13,7 @@ export function AboutHero() {
         {/* Left Column (Text) */}
         <div className="flex-1 text-left space-y-8">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight leading-tight">
-            <TranslatableText text="help gives everybody a say" />
+            <TranslatableText text="Revuzza gives everybody a say" />
           </h1>
           <p className="text-lg text-gray-600 max-w-lg leading-relaxed">
             <TranslatableText text="The world's largest independent customer feedback platform." />
@@ -22,9 +22,9 @@ export function AboutHero() {
           <div className="flex flex-col sm:flex-row gap-4">
             
             {/* 1. Primary Button */}
-            <Link href="/how-help-works">
+            <Link href="/how-revuzza-works">
               <Button size="lg" className="w-full sm:w-auto bg-[#0ABED6] hover:bg-[#09A8BD] text-white font-semibold rounded-full px-8 h-14 text-base shadow-sm transition-all">
-                <TranslatableText text="How help works" />
+                <TranslatableText text="How revuzza works" />
               </Button>
             </Link>
 
@@ -47,7 +47,7 @@ export function AboutHero() {
         <div className="flex-1 w-full relative aspect-[4/3] md:aspect-auto md:h-[400px] rounded-2xl overflow-hidden bg-gray-50">
            <Image
               src="/images/about-banner.svg" 
-              alt="People connecting through help"
+              alt="People connecting through Revuzza"
               fill
               className="object-cover bg-gray-100"
               priority

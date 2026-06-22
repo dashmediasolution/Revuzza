@@ -13,7 +13,7 @@ export function VisionSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-left leading-relaxed text-gray-600 text-lg">
           <div className="space-y-4">
             <p>
-              <TranslatableText text="Founded in 2024," /> <span className="font-semibold text-gray-900">help</span> <TranslatableText text="began with a simple yet powerful vision: to become the universal symbol of trust, connecting consumers and businesses through reviews." />
+              <TranslatableText text="Founded in 2024," /> <span className="font-semibold text-gray-900">Revuzza</span> <TranslatableText text="began with a simple yet powerful vision: to become the universal symbol of trust, connecting consumers and businesses through reviews." />
             </p>
             <p>
               <TranslatableText text="As an open, independent, and impartial service, our platform helps people make confident choices and businesses earn loyalty at every step." />

@@ -18,7 +18,7 @@ const STATIC_ROUTES: Array<{
   { path: '', priority: 1.0, frequency: 'daily' },
   { path: '/about', priority: 0.7, frequency: 'monthly' },
   { path: '/contact', priority: 0.7, frequency: 'monthly' },
-  { path: '/help', priority: 0.7, frequency: 'weekly' },
+  { path: '/revuzza', priority: 0.7, frequency: 'weekly' },
 
   { path: '/blog', priority: 0.9, frequency: 'daily' },
   { path: '/categories', priority: 0.9, frequency: 'daily' },

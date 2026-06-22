@@ -175,11 +175,11 @@ async function main() {
   const adminPassword = await bcrypt.hash("admin123", 10);
   
   const admin = await prisma.user.upsert({
-    where: { email: "admin@help.com" },
+    where: { email: "admin@revuzza.com" },
     update: {},
     create: {
       name: "Super Admin",
-      email: "admin@help.com",
+      email: "admin@revuzza.com",
       password: adminPassword,
       image: "https://ui-avatars.com/api/?name=Admin&background=000032&color=fff",
       role: "ADMIN" // <--- Important: This requires the Role enum in schema

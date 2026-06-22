@@ -32,7 +32,7 @@ export function BusinessTestimonialSection() {
              <TranslatableText text="Trusted by businesses like yours" />
           </h2>
           <p className="text-lg text-gray-600">
-            <TranslatableText text="See how companies are using Help to build reputation and grow revenue." />
+            <TranslatableText text="See how companies are using Revuzza to build reputation and grow revenue." />
           </p>
         </div>
 

@@ -44,7 +44,7 @@ export function CompanyAboutSection({ company }: CompanyAboutSectionProps) {
                  <TranslatableText text={company.briefIntroduction} />
               ) : (
                  <p>
-                    <TranslatableText text="Information about" /> {company.name} <TranslatableText text="is currently being updated. This company is verified on Help and actively collecting customer feedback." />
+                    <TranslatableText text="Information about" /> {company.name} <TranslatableText text="is currently being updated. This company is verified on Revuzza and actively collecting customer feedback." />
                  </p>
               )}
             </div>
