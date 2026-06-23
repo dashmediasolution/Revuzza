@@ -10,7 +10,7 @@ import Link from 'next/link';
 
 export function BusinessLoginForm() {
   // Use the existing authenticate action
-  const [errorMessage, formAction, isPending] = useActionState(authenticate, undefined);
+  const [errorMessage,  formAction, isPending] = useActionState(authenticate, undefined);
 
   return (
     <div className="w-full max-w-md mx-auto space-y-8">

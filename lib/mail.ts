@@ -6,10 +6,12 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 // Configure the email transporter using your Gmail credentials
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.resend.com",
+  port: 587,
+  secure: false, // true for 465, false for 587
   auth: {
-    user: process.env.SMTP_EMAIL,     // From your .env file
-    pass: process.env.SMTP_PASSWORD,  // From your .env file
+    user: "resend",                      // CRITICAL: This must literally be the string "resend"
+    pass: process.env.RESEND_API_KEY,     // Your Resend API key (e.g., re_12345...)
   },
 });
 
@@ -293,7 +295,7 @@ export const sendForgotPasswordEmail = async (
       `,
     });
 
-
+    console.log(info,"INFO")
     return { success: true };
 
   } catch (error) {

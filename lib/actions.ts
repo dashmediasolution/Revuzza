@@ -191,7 +191,6 @@ export async function updateAdminDetails(prevState: any, formData: FormData) {
 
 
 export async function forgotPassword(email: string) {
-
   // 1. Check user (pseudo DB)
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
@@ -211,7 +210,8 @@ export async function forgotPassword(email: string) {
 
   // 4. Send email (pseudo)
 
-  await sendForgotPasswordEmail(email, token);
+ const res =  await sendForgotPasswordEmail(email, token);
+ console.log(res,"email res")
   return { success: "Reset link sent" };
 }
 
