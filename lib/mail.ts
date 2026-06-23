@@ -295,7 +295,6 @@ export const sendForgotPasswordEmail = async (
       `,
     });
 
-    console.log(info,"INFO")
     return { success: true };
 
   } catch (error) {
