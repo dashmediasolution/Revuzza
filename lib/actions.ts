@@ -10,7 +10,7 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
 import { v2 as cloudinary } from 'cloudinary';
 import { generateReviewKeywords } from '@/lib/search-action';
-import { sendApprovalEmail, sendForgotPasswordEmail, sendRejectionEmail } from "@/lib/mail";
+import { sendApprovalEmail, sendForgotPasswordEmail, sendRejectionEmail, sendUserVerificationEmail } from "@/lib/mail";
 import { v4 as uuidv4 } from "uuid";
 import { sendDomainVerificationEmail } from "@/lib/mail";
 import crypto from "crypto";
@@ -268,7 +268,7 @@ export async function authenticate(prevState: any, formData: FormData) {
     // 4. Fetch user from database to check role
     const user = await prisma.user.findUnique({
       where: { email },
-      select: { id: true, password: true, role: true }
+      select: { id: true, password: true, role: true, emailVerified: true }
     });
 
     if (!user || !user.password) {
@@ -279,6 +279,10 @@ export async function authenticate(prevState: any, formData: FormData) {
     const passwordsMatch = await bcrypt.compare(password, user.password);
     if (!passwordsMatch) {
       return 'Invalid credentials.';
+    }
+
+    if (user.role === 'USER' && !user.emailVerified) {
+      return 'Please verify your email before logging in.';
     }
 
     // 6. Role-based portal access control
@@ -360,6 +364,55 @@ export async function authenticate(prevState: any, formData: FormData) {
   }
 }
 
+async function createVerificationToken(email: string) {
+  const token = uuidv4();
+  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+  await prisma.verificationToken.create({
+    data: {
+      identifier: email,
+      token,
+      expires,
+    },
+  });
+
+  return token;
+}
+
+export async function verifyEmailToken(token: string) {
+  if (!token) {
+    return { success: false, message: 'Missing verification token.' };
+  }
+
+  const verificationToken = await prisma.verificationToken.findUnique({
+    where: { token },
+  });
+
+  if (!verificationToken || verificationToken.expires < new Date()) {
+    return { success: false, message: 'This verification link is invalid or has expired.' };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: verificationToken.identifier },
+    select: { id: true, role: true, emailVerified: true },
+  });
+
+  if (!user || user.role !== 'USER') {
+    return { success: false, message: 'User account not found or not eligible for verification.' };
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { emailVerified: new Date() },
+  });
+
+  await prisma.verificationToken.delete({
+    where: { token },
+  });
+
+  return { success: true, message: 'Email verified successfully. You can now log in.' };
+}
+
 export async function registerUser(prevState: any, formData: FormData) {
   const name = formData.get('name') as string;
   const email = formData.get('email') as string;
@@ -379,6 +432,7 @@ export async function registerUser(prevState: any, formData: FormData) {
     });
 
     if (existingUser) {
+      console.log(existingUser)
       return { error: 'Email already in use. Please login.' };
     }
 
@@ -386,17 +440,26 @@ export async function registerUser(prevState: any, formData: FormData) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // 4. Create User in DB
-    await prisma.user.create({
+    const createdUser = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
+        role: 'USER',
         image: `https://ui-avatars.com/api/?name=${name}&background=random`, // Generate a default avatar
       },
     });
 
-    // 5. Redirect or Login (We won't return here, signIn throws a redirect error which Next.js handles)
-    // For now, let's return success so the UI can redirect to login
+    // 5. Create and send email verification token
+    const verificationToken = await createVerificationToken(email);
+    const emailResult = await sendUserVerificationEmail(email, verificationToken);
+
+    if (!emailResult.success) {
+      await prisma.user.delete({ where: { id: createdUser.id } });
+      await prisma.verificationToken.deleteMany({ where: { identifier: email } });
+      return { error: 'We could not send a verification email. Please try again.' };
+    }
+
     return { success: true };
 
   } catch (error) {

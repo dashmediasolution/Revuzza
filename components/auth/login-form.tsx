@@ -132,23 +132,23 @@ export function LoginForm() {
         {isRegistered && (
           <div className="mb-6 p-3 text-sm text-emerald-600 bg-emerald-50 rounded-md border border-emerald-100 flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-emerald-500" />
-            <TranslatableText text="Account created! Please log in." />
+            <TranslatableText text="Verification email sent .Verify your email before log in." />
           </div>
         )}
 
         <div className="space-y-6">
-          <SocialButton callbackUrl={callbackUrl} />
+          {/* <SocialButton callbackUrl={callbackUrl} />
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
+             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-white px-2 text-muted-foreground">
                 <TranslatableText text="Or login with email" />
               </span>
             </div>
-          </div>
+          </div> */}
 
           <form action={formAction} className="space-y-4">
             <input type="hidden" name="redirectTo" value={callbackUrl} />

@@ -87,6 +87,38 @@ export const sendRejectionEmail = async (email: string, businessName: string) =>
   }
 };
 
+// --- SEND USER EMAIL VERIFICATION EMAIL ---
+export const sendUserVerificationEmail = async (email: string, token: string) => {
+  const verifyLink = `${domain}/verify-email?token=${token}`;
+
+  try {
+    await transporter.sendMail({
+      from: `"Revuzza Account Security" <${process.env.SMTP_EMAIL}>`,
+      to: email,
+      subject: "Verify your email address",
+      html: `
+        <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #000032;">Verify your email</h2>
+          <p>Hello,</p>
+          <p>Thanks for signing up on Revuzza. Please verify your email address to activate your account.</p>
+          <div style="margin: 30px 0;">
+            <a href="${verifyLink}" style="background-color: #0ABED6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+              Verify Email
+            </a>
+          </div>
+          <p style="font-size: 12px; color: #888;">
+            This link will expire in 24 hours.
+          </p>
+        </div>
+      `,
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("❌ User Verification Email Error:", error);
+    return { success: false, error };
+  }
+};
+
 // --- SEND DOMAIN VERIFICATION EMAIL ---
 export const sendDomainVerificationEmail = async (email: string, token: string) => {
   const verifyLink = `${domain}/business/verify-domain?token=${token}`;

@@ -16,7 +16,6 @@ export default async function BlogDashboard() {
       model: "BLOG" 
     },
     orderBy: { updatedAt: 'desc' },
-    take: 10 
   });
 
   const rejectedItems = myRequests.filter(req => req.status === "REJECTED");
@@ -36,7 +35,7 @@ export default async function BlogDashboard() {
       {/* Alert Section */}
       {rejectedItems.length > 0 && (
          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-8">
-            <h3 className="font-bold text-red-800 flex items-center gap-2 mb-2">
+        <h3 className="font-bold text-red-800 flex items-center gap-2 mb-2">
                <XCircle className="h-5 w-5" /> Attention Required
             </h3>
             <p className="text-sm text-red-600">
